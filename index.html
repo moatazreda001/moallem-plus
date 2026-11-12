@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3558c9">
 <title>مدرس بلس</title>
-<!-- ملف Manifest حقيقي ومفعل لضمان ظهور زر التثبيت الحقيقي -->
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D9%85%D8%AF%D8%B1%D8%B3%20%D8%A8%D9%84%D8%B3%22%2C%22short_name%22%3A%22%D9%85%D8%AF%D8%B1%D8%B3%20%D8%A8%D9%84%D8%B3%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f6fa%22%2C%22theme_color%22%3A%22%233558c9%22%2C%22icons%22%3A%5B%5D%7D">
+<!-- ربط ملف الـ Manifest المنفصل -->
+<link rel="manifest" href="manifest.json">
 <style>
 :root{--bg:#f5f6fa;--card:#fff;--tx:#1e2433;--mut:#6a7388;--pri:#3558c9;--priTx:#fff;--red:#c0392b;--grn:#1f8a58;--bd:#e1e4ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1b1f2b;--tx:#e8ebf5;--mut:#9aa3ba;--pri:#6b8cff;--priTx:#0c1233;--red:#ec7063;--grn:#5fd09a;--bd:#2a3040}}
@@ -18,7 +18,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Tahoma
 h1{font-size:20px;margin:4px 0 12px;display:flex;justify-content:space-between;align-items:center}
 .user-badges{display:flex;gap:6px;align-items:center}
 .user-badge{font-size:12px;background:var(--card);border:1px solid var(--bd);padding:4px 10px;border-radius:20px;color:var(--mut);cursor:pointer}
-.install-badge{font-size:12px;background:var(--pri);color:var(--priTx);padding:4px 10px;border-radius:20px;cursor:pointer;font-weight:600}
+.install-badge{font-size:12px;background:var(--pri);color:var(--priTx);padding:4px 10px;border-radius:20px;cursor:pointer;font-weight:600;display:inline-block}
 .tabs{display:flex;gap:6px;margin-bottom:12px}
 .tabs button{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
 .tabs button.on{background:var(--pri);color:var(--priTx);border-color:var(--pri)}
@@ -72,14 +72,10 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div class="wrap" id="app"></div>
 <dialog id="dlg"><h3 id="dt" style="margin-top:0"></h3><div id="df"></div></dialog>
 <script>
-// تفعيل Service Worker للعمل أوفلاين وتثبيت التطبيق
+// تسجيل ملف Service Worker المنفصل (sw.js) للعمل أوفلاين
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
-      self.addEventListener('install', function(e) { e.waitUntil(self.skipWaiting()); });
-      self.addEventListener('activate', function(e) { e.waitUntil(self.clients.claim()); });
-      self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });
-    `)).catch(function(err) {});
+    navigator.serviceWorker.register('sw.js').catch(function(err) {});
   });
 }
 
@@ -94,7 +90,6 @@ var db = { s: [], g: [], pay: {}, att: {} };
 var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل", showAllGroupsToday = false;
 
 if (teacherPhone) {
-  // استرجاع الداتا الموحدة المرتبطة برقم الهاتف
   var saved = localStorage.getItem("cloud_backup_" + teacherPhone);
   if (saved) { try { db = JSON.parse(saved); } catch(e) {} }
   db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
@@ -115,28 +110,30 @@ function loginUser(phone, password) {
   if (phone.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
   if (password.length < 4) { alert("كلمة المرور يجب ألا تقل عن 4 أرقام أو حروف"); return; }
   
-  // مفتاح كلمة المرور الموحد والمشترك سحابياً ومحلياً
-  var passKey = "master_teacher_pass_" + phone;
+  // مفتاح كلمة المرور الموحد والمشترك تماماً لكل الأجهزة
+  var passKey = "global_master_pass_" + phone;
   var savedPass = localStorage.getItem(passKey);
 
+  // إذا لم نجدها بالمفتاح العالمي، نبحث في أي نسخة قديمة لتجنب فقدان الحسابات القائمة
   if (!savedPass) {
-    // التحقق من وجود كلمة مرور سابقة محفوظة داخل نسخة الاحتياط السحابي لهذا الرقم
-    var cloudData = localStorage.getItem("cloud_backup_" + phone);
-    if (cloudData) {
-      // لو الحساب له بيانات قديمة، نعتبر أول كلمة سر تدخل أو نبحث عنها، وللأمان نثبتها
-      var legacyPass = localStorage.getItem("teacher_pass_" + phone);
-      if (legacyPass) { savedPass = legacyPass; localStorage.setItem(passKey, savedPass); }
+    var legacy1 = localStorage.getItem("master_teacher_pass_" + phone);
+    var legacy2 = localStorage.getItem("teacher_pass_" + phone);
+    if (legacy1) savedPass = legacy1;
+    else if (legacy2) savedPass = legacy2;
+    
+    if (savedPass) {
+      localStorage.setItem(passKey, savedPass);
     }
   }
 
   if (savedPass) {
-    // لو الباسورد مسجل مسبقاً لهذا الرقم، يجب مطبقته بدقة منعاً لأي تلاعب أو تباين بين الأجهزة
+    // لو الرقم مسجل من قبل، يجب مطابقة كلمة المرور المركزية بدقة تامة من أي جهاز
     if (savedPass !== password) {
       alert("كلمة المرور غير صحيحة لهذا الرقم!");
       return;
     }
   } else {
-    // لو الرقم جديد تماماً، نسجل كلمة المرور الخاصة به نهائياً
+    // لو الرقم جديد تماماً، يتم اعتماد وحفظ كلمة المرور عالمياً لهذا الرقم
     localStorage.setItem(passKey, password);
   }
 
