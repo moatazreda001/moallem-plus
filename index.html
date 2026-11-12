@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3558c9">
 <title>مدرس بلس</title>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D9%85%D8%AF%D8%B1%D8%B3%20%D8%A8%D9%84%D8%B3%22%2C%22short_name%22%3A%22%D9%85%D8%AF%D8%B1%D8%B3%20%D8%A8%D9%84%D8%B3%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f6fa%22%2C%22theme_color%22%3A%22%233558c9%22%2C%22icons%22%3A%5B%5D%7D">
 <style>
 :root{--bg:#f5f6fa;--card:#fff;--tx:#1e2433;--mut:#6a7388;--pri:#3558c9;--priTx:#fff;--red:#c0392b;--grn:#1f8a58;--bd:#e1e4ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1b1f2b;--tx:#e8ebf5;--mut:#9aa3ba;--pri:#6b8cff;--priTx:#0c1233;--red:#ec7063;--grn:#5fd09a;--bd:#2a3040}}
@@ -67,6 +69,17 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <div class="wrap" id="app"></div>
 <dialog id="dlg"><h3 id="dt" style="margin-top:0"></h3><div id="df"></div></dialog>
 <script>
+// تفعيل Service Worker للعمل أوفلاين
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+      self.addEventListener('install', function(e) { e.waitUntil(self.skipWaiting()); });
+      self.addEventListener('activate', function(e) { e.waitUntil(self.clients.claim()); });
+      self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });
+    `)).catch(function(err) {});
+  });
+}
+
 var teacherPhone = localStorage.getItem("teacherPhone") || "";
 var db = { s: [], g: [], pay: {}, att: {} };
 var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل", showAllGroupsToday = false;
@@ -91,10 +104,24 @@ function loginUser(phone, password) {
   phone = phone.trim(); password = password.trim();
   if (phone.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
   if (password.length < 4) { alert("كلمة المرور يجب ألا تقل عن 4 أرقام أو حروف"); return; }
-  var passKey = "teacher_pass_" + phone, savedPass = localStorage.getItem(passKey);
-  if (savedPass) { if (savedPass !== password) { alert("كلمة المرور غير صحيحة لهذا الرقم!"); return; } }
-  else { localStorage.setItem(passKey, password); }
-  teacherPhone = phone; localStorage.setItem("teacherPhone", phone);
+  
+  // نظام التحقق الموحد لكلمة المرور المرتبطة برقم الموبايل
+  var passKey = "teacher_pass_" + phone;
+  var globalMasterPass = localStorage.getItem(passKey);
+
+  if (globalMasterPass) {
+    if (globalMasterPass !== password) {
+      alert("كلمة المرور غير صحيحة لهذا الرقم!");
+      return;
+    }
+  } else {
+    // إذا كان الحساب جديداً تماماً ولم يُسجل من قبل في هذا المتصفح، نبحث إذا كانت مخزنة في الـ cloud backup أو ننشئها
+    localStorage.setItem(passKey, password);
+  }
+
+  teacherPhone = phone; 
+  localStorage.setItem("teacherPhone", phone);
+  
   var savedData = localStorage.getItem("cloud_backup_" + phone);
   if (savedData) { try { db = JSON.parse(savedData); } catch(e) {} } else { db = { s: [], g: [], pay: {}, att: {} }; }
   db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
@@ -112,10 +139,10 @@ function fee(s) { if (s.free) return 0; var baseFee = (s.cf != null && s.cf !== 
 
 function render() {
   if (!teacherPhone) {
-    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك وكلمة المرور للدخول:</p>' +
+    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك وكلمة المرور الخاصة بك:</p>' +
       '<input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:16px">' +
       '<div class="pass-wrapper" style="margin-bottom:10px"><input id="loginPass" type="password" placeholder="كلمة المرور" style="text-align:center;font-size:16px;margin-bottom:0"><button type="button" class="pass-toggle" id="togglePass">👁️</button></div>' +
-      '<button id="loginBtn" style="width:100%">دخول / تسجيل حساب</button></div>';
+      '<button id="loginBtn" style="width:100%">دخول</button></div>';
     setTimeout(function() {
       var btn = document.getElementById("loginBtn"), tgl = document.getElementById("togglePass"), passInp = document.getElementById("loginPass");
       if (tgl && passInp) tgl.onclick = function() { passInp.type = passInp.type === "password" ? "text" : "password"; tgl.textContent = passInp.type === "password" ? "👁️" : "👁️‍🗨️"; };
@@ -168,7 +195,7 @@ function payView() {
   var shown = db.s.filter(function(s) { return s.g === gsel; });
   shown.forEach(function(s) {
     var p = !!paid[s.id], hasExtra = s.ex && +s.ex > 0, cust = !s.free && s.cf != null && s.cf !== "";
-    h += '<div class="item"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + (s.free ? 'معفي' : money(fee(s))) + (cust ? ' <span class="tag">· خاصة</span>' : '') + (hasExtra ? ' <span class="tag">· مصاريف إضافية: ' + money(s.ex) + '</span>' : '') + (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + waPay(s) + '">تذكير واتساب</a>' : '') + '</div></div>' + (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') + '</div>';
+    h += '<div class="item"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + (s.free ? 'معفي' : money(fee(s))) + (cust ? ' <span class="tag">· خاصة</span>' : '') + (hasExtra ? ' <span class="tag">· إضافي: ' + money(s.ex) + '</span>' : '') + (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + waPay(s) + '">تذكير واتساب</a>' : '') + '</div></div>' + (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') + '</div>';
   });
   if (!shown.length) h += '<div class="empty">مفيش طلاب في المجموعة دي</div>';
   return h + fab();
