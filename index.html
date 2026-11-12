@@ -108,7 +108,7 @@ function mlabel(d) { return d.toLocaleDateString("ar-EG", { month: "long", year:
 function dlabel(d) { return d.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" }); }
 function money(n) { return Number(n).toLocaleString("ar-EG") + " ج"; }
 function grp(id) { return db.g.find(function(g) { return g.id === id; }); }
-function fee(s) { if (s.free) return 0; if (s.cf != null && s.cf !== "") return +s.cf || 0; var g = grp(s.g); return g ? +g.fee || 0 : 0; }
+function fee(s) { if (s.free) return 0; var baseFee = (s.cf != null && s.cf !== "") ? (+s.cf || 0) : (grp(s.g) ? +grp(s.g).fee || 0 : 0); var extra = +s.ex || 0; return baseFee + extra; }
 
 function render() {
   if (!teacherPhone) {
@@ -152,11 +152,11 @@ function payView() {
   var pay = db.s.filter(function(s) { return !s.free; });
   var np = pay.filter(function(s) { return paid[s.id]; }).length;
   
-  // حساب إجمالي الفلوس المحصلة والمتبقية
   var totalCollected = pay.filter(function(s) { return paid[s.id]; }).reduce(function(a, s) { return a + fee(s); }, 0);
   var left = pay.filter(function(s) { return !paid[s.id]; }).reduce(function(a, s) { return a + fee(s); }, 0);
 
   var h = '<div class="month"><button class="sec" id="pm">→</button><b>' + mlabel(mon) + '</b><button class="sec" id="nm">←</button></div>';
+  h += '<div style="margin-bottom:8px"><button class="sec sm" id="monthReportBtn" style="width:100%">📊 تقرير الشهر المالي الشامل</button></div>';
   h += '<div class="stats">' +
        '<div class="stat"><small>دفعوا</small><b>' + np + ' / ' + pay.length + '</b></div>' +
        '<div class="stat"><small>إجمالي المحصل</small><b style="color:var(--grn)">' + money(totalCollected) + '</b></div>' +
@@ -167,14 +167,15 @@ function payView() {
   h += groupSel();
   var shown = db.s.filter(function(s) { return s.g === gsel; });
   shown.forEach(function(s) {
-    var p = !!paid[s.id], cust = !s.free && s.cf != null && s.cf !== "";
-    h += '<div class="item"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + (s.free ? 'معفي' : money(fee(s))) + (cust ? ' <span class="tag">· مصاريف خاصة</span>' : '') + (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + wa(s) + '">تذكير واتساب</a>' : '') + '</div></div>' + (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') + '</div>';
+    var p = !!paid[s.id], hasExtra = s.ex && +s.ex > 0, cust = !s.free && s.cf != null && s.cf !== "";
+    h += '<div class="item"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + (s.free ? 'معفي' : money(fee(s))) + (cust ? ' <span class="tag">· خاصة</span>' : '') + (hasExtra ? ' <span class="tag">· مصاريف إضافية: ' + money(s.ex) + '</span>' : '') + (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + waPay(s) + '">تذكير واتساب</a>' : '') + '</div></div>' + (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') + '</div>';
   });
   if (!shown.length) h += '<div class="empty">مفيش طلاب في المجموعة دي</div>';
   return h + fab();
 }
 
-function wa(s) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") === 0) ph = "2" + ph; return "https://wa.me/" + ph + "?text=" + encodeURIComponent("السلام عليكم، تذكير بمصاريف شهر " + mlabel(mon) + " للطالب " + s.n + " (" + money(fee(s)) + "). شكراً."); }
+function waPay(s) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") === 0) ph = "2" + ph; return "https://wa.me/" + ph + "?text=" + encodeURIComponent("السلام عليكم، تذكير بمصاريف شهر " + mlabel(mon) + " للطالب " + s.n + " (" + money(fee(s)) + "). شكراً."); }
+function waAbs(s, absDates) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") === 0) ph = "2" + ph; return "https://wa.me/" + ph + "?text=" + encodeURIComponent("السلام عليكم ولي أمر الطالب " + s.n + "، نود إحاطتكم بأن الطالب تغيب عن الحضور في الأيام التالية:\n" + absDates.join(", ") + "\nبرجاء المتابعة وشكراً."); }
 
 function attView() {
   var d = dk(dayD), rec = db.att[d] || {};
@@ -276,9 +277,9 @@ function studentsView() {
     h += '<div class="item" style="flex-direction:column;align-items:stretch;gap:8px">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + esc(g ? g.n : '') + ' · ' + (s.free ? 'معفي' : money(fee(s))) + '</div></div>';
     h += s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (isPaid ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (isPaid ? '✓ دفع' : 'لسه') + '</button>';
-    h += '</div><div style="font-size:12px;background:var(--bg);padding:8px;border-radius:10px;border:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
-    h += '<span>حضر: <b style="color:var(--grn)">' + presCount + '</b> يوم</span> | <span>غاب: <b style="color:var(--red)">' + absDates.length + '</b> يوم</span>';
-    h += '<div style="width:100%;margin-top:4px;color:var(--red)">تواريخ الغياب: ' + (absDates.length ? absDates.join(', ') : 'لا يوجد غياب') + '</div>';
+    h += '</div><div style="font-size:12px;background:var(--bg);padding:8px;border-radius:10px;border:1px solid var(--bd);display:flex;flex-direction:column;gap:6px">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center"><span>حضر: <b style="color:var(--grn)">' + presCount + '</b> يوم | غاب: <b style="color:var(--red)">' + absDates.length + '</b> يوم</span>' + (s.ph && absDates.length ? '<a class="link" target="_blank" rel="noopener" href="' + waAbs(s, absDates) + '">💬 إرسال الغياب لواتساب</a>' : '') + '</div>';
+    h += '<div style="color:var(--red)">تواريخ الغياب: ' + (absDates.length ? absDates.join(', ') : 'لا يوجد غياب') + '</div>';
     h += '</div></div>';
   });
 
@@ -299,11 +300,42 @@ function grpView() {
 
 function fab() { return '<button class="fab" id="adds">+ طلاب</button>'; }
 
+function openMonthReport() {
+  var m = mk(mon), paid = db.pay[m] || {};
+  var pay = db.s.filter(function(s) { return !s.free; });
+  var freeCount = db.s.length - pay.length;
+  var paidStudents = pay.filter(function(s) { return paid[s.id]; });
+  var unpaidStudents = pay.filter(function(s) { return !paid[s.id]; });
+  
+  var expectedTotal = pay.reduce(function(a, s) { return a + fee(s); }, 0);
+  var collectedTotal = paidStudents.reduce(function(a, s) { return a + fee(s); }, 0);
+  var remainingTotal = unpaidStudents.reduce(function(a, s) { return a + fee(s); }, 0);
+
+  var f = document.getElementById('df'), d = document.getElementById('dlg');
+  var html = '<div style="font-size:14px;line-height:1.6">' +
+             '<p><b>الشهر:</b> ' + mlabel(mon) + '</p>' +
+             '<p><b>إجمالي الطلاب:</b> ' + db.s.length + ' (' + pay.length + ' دافع، ' + freeCount + ' معفي)</p>' +
+             '<p><b>إجمالي الدخل المتوقع:</b> ' + money(expectedTotal) + '</p>' +
+             '<p style="color:var(--grn)"><b>إجمالي المحصل فعلياً:</b> ' + money(collectedTotal) + '</p>' +
+             '<p style="color:var(--red)"><b>المتبقي تحصيله:</b> ' + money(remainingTotal) + '</p>' +
+             '<hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">' +
+             '<p><b>الطلاب الذين لم يدفعوا (' + unpaidStudents.length + '):</b></p>' +
+             '<div style="max-height:120px;overflow-y:auto;background:var(--bg);padding:8px;border-radius:8px;font-size:13px">' +
+             (unpaidStudents.length ? unpaidStudents.map(function(s){ return esc(s.n) + ' (' + money(fee(s)) + ')'; }).join(', ') : 'الكل دفع!') +
+             '</div></div>' +
+             '<div class="dlg-actions" style="margin-top:14px"><button id="printRep">🖨️ طباعة التقرير</button><button class="sec" id="closeRep">إغلاق</button></div>';
+
+  f.innerHTML = html; document.getElementById('dt').textContent = 'تقرير الشهر المالي'; d.showModal();
+  document.getElementById('closeRep').onclick = function() { d.close(); };
+  document.getElementById('printRep').onclick = function() { window.print(); };
+}
+
 function bind() {
   var q = function(i) { return document.getElementById(i); };
   if (q("gs")) q("gs").onchange = function() { gsel = this.value; render(); };
   if (q("attSearch")) q("attSearch").oninput = function() { var pos = this.selectionStart; attQuery = this.value; render(); var el = q("attSearch"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
   if (q("toggleAllGroups")) q("toggleAllGroups").onclick = function() { showAllGroupsToday = !showAllGroupsToday; render(); };
+  if (q("monthReportBtn")) q("monthReportBtn").onclick = openMonthReport;
   
   if (q("studentSearchInput")) q("studentSearchInput").oninput = function() { var pos = this.selectionStart; studentQuery = this.value; render(); var el = q("studentSearchInput"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
   if (q("studentGroupFilter")) q("studentGroupFilter").onchange = function() { studentFilterGrp = this.value; render(); };
@@ -333,21 +365,30 @@ function bind() {
 }
 
 function studentRowsHTML(count) {
-  var h = '<table class="student-table"><thead><tr><th style="width:43%">اسم الطالب</th><th>رقم ولي الأمر (اختياري)</th><th style="width:42px"></th></tr></thead><tbody id="studentRows">';
-  for (var i = 0; i < (count || 3); i++) h += '<tr><td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td></tr>';
+  var h = '<table class="student-table"><thead><tr><th style="width:40%">اسم الطالب</th><th style="width:35%">موبايل ولي الأمر</th><th>إضافي</th><th style="width:35px"></th></tr></thead><tbody id="studentRows">';
+  for (var i = 0; i < (count || 3); i++) h += '<tr><td><input class="student-name" type="text" placeholder="الاسم" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="الموبايل" autocomplete="off"></td><td><input class="student-extra" type="number" inputmode="decimal" placeholder="ملزمة" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف">×</button></td></tr>';
   return h + '</tbody></table><button type="button" class="sec addrow" id="addStudentRow">+ إضافة طالب آخر</button>';
 }
 
 function setupStudentRows() {
   var body = document.getElementById('studentRows'); if (!body) return;
-  function addRow(focus) { var tr = document.createElement('tr'); tr.innerHTML = '<td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td>'; body.appendChild(tr); if (focus) tr.querySelector('.student-name').focus(); }
+  function addRow(focus) { var tr = document.createElement('tr'); tr.innerHTML = '<td><input class="student-name" type="text" placeholder="الاسم" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="الموبايل" autocomplete="off"></td><td><input class="student-extra" type="number" inputmode="decimal" placeholder="ملزمة" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف">×</button></td>'; body.appendChild(tr); if (focus) tr.querySelector('.student-name').focus(); }
   document.getElementById('addStudentRow').onclick = function() { addRow(true); };
   body.addEventListener('input', function(e) { var tr = e.target.closest('tr'); if (tr && tr === body.lastElementChild && e.target.value.trim()) addRow(false); });
   body.addEventListener('click', function(e) { if (e.target.classList.contains('delrow')) { if (body.children.length > 1) e.target.closest('tr').remove(); else { body.querySelectorAll('input').forEach(function(x) { x.value = ''; }); } } });
 }
 
-function collectStudentRows() { return Array.from(document.querySelectorAll('#studentRows tr')).map(function(tr) { return { n: tr.querySelector('.student-name').value.trim(), ph: tr.querySelector('.student-phone').value.trim() }; }).filter(function(x) { return x.n !== ''; }); }
-function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph }); }); }
+function collectStudentRows() { 
+  return Array.from(document.querySelectorAll('#studentRows tr')).map(function(tr) { 
+    return { 
+      n: tr.querySelector('.student-name').value.trim(), 
+      ph: tr.querySelector('.student-phone').value.trim(),
+      ex: parseFloat(tr.querySelector('.student-extra').value) || 0
+    }; 
+  }).filter(function(x) { return x.n !== ''; }); 
+}
+
+function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph, ex: x.ex }); }); }
 
 function openStudentEntry(title, gid, isNewGroup) {
   var f = document.getElementById('df'), d = document.getElementById('dlg');
@@ -366,7 +407,7 @@ function openStudentEntry(title, gid, isNewGroup) {
             '<label class="day-chk"><input type="checkbox" class="gday" value="6" checked> سبت</label>' +
             '</div>';
   }
-  html += '<div class="hint">اكتب كل طالب في صف مستقل. رقم ولي الأمر اختياري، وتقدر تضيف صفوف جديدة وقت ما تحتاج.</div>' + studentRowsHTML(3) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
+  html += '<div class="hint">اكتب كل طالب في صف مستقل. خانة الإضافي (للملازم/المذكرات) اختيارية.</div>' + studentRowsHTML(3) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
   f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
   document.getElementById('studentCancel').onclick = function() { d.close(); };
   document.getElementById('studentSave').onclick = function() {
@@ -410,7 +451,21 @@ function editGroup(id) {
 
 function editStudent(id) {
   var s = db.s.find(function(x) { return x.id === id; }), g = grp(s.g);
-  ask("تعديل الطالب", [{ p: "اسم الطالب", v: s.n }, { p: "مصاريف خاصة (سيبها فاضية لو نفس مصاريف المجموعة: " + money(g.fee || 0) + ")", num: 1, v: s.cf }, { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, { chk: "معفي من المصاريف", v: s.free }], function(v) { if (!v[0]) return false; s.n = v[0]; s.cf = v[1] === "" ? null : parseFloat(v[1]); s.ph = v[2]; s.free = !!v[3]; save(); render(); return true; }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } });
+  ask("تعديل الطالب", [
+    { p: "اسم الطالب", v: s.n }, 
+    { p: "مصاريف خاصة (اكتبها لو مختلفة عن المجموعة)", num: 1, v: s.cf }, 
+    { p: "مصاريف إضافية (ملازم/مذكرات)", num: 1, v: s.ex }, 
+    { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, 
+    { chk: "معفي من المصاريف", v: s.free }
+  ], function(v) { 
+    if (!v[0]) return false; 
+    s.n = v[0]; 
+    s.cf = v[1] === "" ? null : parseFloat(v[1]); 
+    s.ex = parseFloat(v[2]) || 0;
+    s.ph = v[3]; 
+    s.free = !!v[4]; 
+    save(); render(); return true; 
+  }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } });
 }
 
 function ask(title, fields, ok, extra, customHtml) {
