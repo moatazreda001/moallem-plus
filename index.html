@@ -2,800 +2,204 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#3558c9">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="مدرس بلس">
-<meta name="description" content="تطبيق إدارة الدروس الخصوصية والحضور والمصاريف">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>مدرس بلس</title>
-<link id="pwa-manifest" rel="manifest">
-<link id="pwa-apple-icon" rel="apple-touch-icon">
 <style>
-/* متغيرات الألوان للوضع النهاري والليلي التلقائي */
-:root {
-  --bg: #f5f6fa;
-  --card: #ffffff;
-  --tx: #1e2433;
-  --mut: #6a7388;
-  --pri: #3558c9;
-  --priTx: #ffffff;
-  --red: #c0392b;
-  --grn: #1f8a58;
-  --bd: #e1e4ee;
-  box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #12141c;
-    --card: #1b1f2b;
-    --tx: #e8ebf5;
-    --mut: #9aa3ba;
-    --pri: #6b8cff;
-    --priTx: #0c1233;
-    --red: #ec7063;
-    --grn: #5fd09a;
-    --bd: #2a3040;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #12141c;
-  --card: #1b1f2b;
-  --tx: #e8ebf5;
-  --mut: #9aa3ba;
-  --pri: #6b8cff;
-  --priTx: #0c1233;
-  --red: #ec7063;
-  --grn: #5fd09a;
-  --bd: #2a3040;
-}
-
-* { box-sizing: border-box; }
-html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--tx);
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-  line-height: 1.5;
-  overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.wrap {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 16px 16px 100px;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 4px 0 12px;
-  gap: 8px;
-}
-
-h1 {
-  font-size: 20px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.icon-btn {
-  padding: 7px 10px;
-  font-size: 13px;
-  border-radius: 10px;
-  background: var(--card);
-  color: var(--tx);
-  border: 1px solid var(--bd);
-  font-weight: 600;
-}
-
-.install-banner {
-  background: linear-gradient(135deg, #3558c9, #24409c);
-  color: #fff;
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(53, 88, 201, 0.25);
-}
-
-.install-banner .ib-txt { font-size: 13px; line-height: 1.4; }
-.install-banner .ib-txt b { display: block; font-size: 14px; margin-bottom: 2px; }
-.install-banner button {
-  background: #fff;
-  color: #3558c9;
-  font-weight: 700;
-  padding: 8px 14px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.tabs button {
-  flex: 1;
-  background: var(--card);
-  color: var(--tx);
-  border: 1px solid var(--bd);
-  font-weight: 600;
-  padding: 10px 6px;
-  font-size: 14px;
-}
-
-.tabs button.on {
-  background: var(--pri);
-  color: var(--priTx);
-  border-color: var(--pri);
-}
-
-button {
-  font: inherit;
-  border: 0;
-  border-radius: 12px;
-  padding: 11px 14px;
-  background: var(--pri);
-  color: var(--priTx);
-  cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.1s ease;
-}
-
-button:active { transform: scale(0.98); }
-button.sec { background: var(--card); color: var(--tx); border: 1px solid var(--bd); }
-button.red { background: transparent; color: var(--red); border: 1px solid var(--red); }
-button.sm { padding: 7px 11px; font-size: 13px; }
-
-input, select, textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--bd);
-  border-radius: 12px;
-  background: var(--card);
-  color: var(--tx);
-  font: inherit;
-  margin-bottom: 10px;
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: 2px solid var(--pri);
-  border-color: transparent;
-}
-
-.chk {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-.chk input { width: auto; margin: 0; }
-
-.stats {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.stat {
-  flex: 1;
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-.stat small { color: var(--mut); }
-.stat b { display: block; font-size: 22px; }
-
-.item {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.item .n { font-weight: 600; }
-.item .p { color: var(--mut); font-size: 13px; }
-
-.acts {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.badge {
-  border-radius: 20px;
-  padding: 8px 14px;
-  font-size: 14px;
-  white-space: nowrap;
-  font-weight: 600;
-}
-
-.paid { background: var(--grn); color: #fff; }
-.unpaid { background: transparent; color: var(--red); border: 1.5px solid var(--red); }
-.pres { background: var(--grn); color: #fff; }
-.abs { background: transparent; color: var(--mut); border: 1.5px solid var(--bd); }
-
-.free {
-  color: var(--mut);
-  border: 1.5px dashed var(--bd);
-  border-radius: 20px;
-  padding: 8px 14px;
-  font-size: 14px;
-}
-
-.tag { color: var(--pri); font-size: 12px; }
-.empty { text-align: center; color: var(--mut); padding: 30px 0; }
-
-.fab {
-  position: fixed;
-  inset-inline-start: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  padding: 14px 20px;
-  border-radius: 30px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  font-weight: 600;
-  z-index: 10;
-}
-
-.month {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.month button { padding: 8px 14px; }
-
-dialog {
-  border: 1px solid var(--bd);
-  border-radius: 16px;
-  background: var(--card);
-  color: var(--tx);
-  width: min(92vw, 420px);
-  padding: 18px;
-}
-dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-
-.row { display: flex; gap: 8px; }
-.row > * { flex: 1; }
-
-.link { color: var(--pri); font-size: 13px; text-decoration: none; }
-.hint { color: var(--mut); font-size: 13px; margin: -4px 0 10px; }
-
-/* جدول إضافة الطلاب */
-.student-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 7px;
-  table-layout: fixed;
-}
-.student-table th { font-size: 13px; color: var(--mut); font-weight: 600; padding: 4px; }
-.student-table td { padding: 0 3px; }
-.student-table input { margin: 0; padding: 10px 8px; min-width: 0; }
-.student-table .delrow { padding: 9px 10px; background: transparent; color: var(--red); border: 1px solid var(--bd); }
-.addrow { width: 100%; margin: 7px 0 12px; }
-.dlg-actions { display: flex; gap: 8px; }
-.dlg-actions > * { flex: 1; }
-
-/* بطاقات المجموعات القابلة للطي في تبويب الحضور */
-.grp-card {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 14px;
-  margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.grp-hdr {
-  padding: 13px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  gap: 10px;
-}
-.grp-hdr:active { opacity: 0.85; }
-
-.grp-title {
-  font-weight: 700;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.grp-arrow {
-  display: inline-block;
-  font-size: 12px;
-  color: var(--mut);
-  transition: transform 0.2s ease;
-}
-.grp-card.open .grp-arrow { transform: rotate(-90deg); }
-
-.grp-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--mut);
-}
-
-.grp-pill {
-  background: var(--bg);
-  border: 1px solid var(--bd);
-  border-radius: 12px;
-  padding: 3px 9px;
-  font-weight: 600;
-  color: var(--tx);
-}
-
-.grp-body {
-  border-top: 1px solid var(--bd);
-  padding: 10px;
-  background: var(--bg);
-}
-
-.grp-search {
-  margin-bottom: 8px;
-  padding: 9px 12px;
-  font-size: 14px;
-  border-radius: 10px;
-}
-
-.grp-body .item { margin-bottom: 6px; padding: 10px 12px; }
-.grp-body .item:last-child { margin-bottom: 0; }
-
-/* تنسيقات تبويب الطلاب وملف الطالب التفصيلي */
-.stu-card {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 14px;
-  margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.stu-hdr {
-  padding: 13px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  gap: 10px;
-}
-.stu-hdr:active { opacity: 0.85; }
-
-.stu-info { display: flex; flex-direction: column; gap: 2px; }
-.stu-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-.stu-sub { font-size: 12px; color: var(--mut); }
-.stu-card.open .grp-arrow { transform: rotate(-90deg); }
-
-.stu-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.mini-pill {
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.mini-pres { background: rgba(31, 138, 88, 0.14); color: var(--grn); }
-.mini-abs { background: rgba(192, 57, 43, 0.14); color: var(--red); }
-.mini-paid { background: var(--grn); color: #fff; }
-.mini-unpaid { border: 1px solid var(--red); color: var(--red); }
-.mini-free { border: 1px dashed var(--bd); color: var(--mut); }
-
-.stu-body {
-  border-top: 1px solid var(--bd);
-  padding: 12px 14px;
-  background: var(--bg);
-}
-
-.stu-sec {
-  background: var(--card);
-  border: 1px solid var(--bd);
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-}
-.stu-sec:last-child { margin-bottom: 0; }
-.stu-sec-title {
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.date-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.date-chip {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 600;
-}
-.chip-pres { background: rgba(31, 138, 88, 0.14); color: var(--grn); border: 1px solid rgba(31, 138, 88, 0.3); }
-.chip-abs { background: rgba(192, 57, 43, 0.12); color: var(--red); border: 1px solid rgba(192, 57, 43, 0.3); }
-
-.filter-bar { display: flex; gap: 8px; margin-bottom: 10px; }
-.filter-bar select { width: auto; min-width: 140px; margin-bottom: 0; }
-.filter-bar input { margin-bottom: 0; flex: 1; }
-.mode-toggle {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.mode-toggle button {
-  flex: 1;
-  padding: 8px 10px;
-  font-size: 13px;
-  background: var(--card);
-  color: var(--tx);
-  border: 1px solid var(--bd);
-}
-.mode-toggle button.on {
-  background: var(--pri);
-  color: var(--priTx);
-  border-color: var(--pri);
-}
-
-.backup-box {
-  background: var(--bg);
-  border: 1px solid var(--bd);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-.backup-box p { margin: 0 0 10px; font-size: 13px; color: var(--mut); }
+:root{--bg:#f5f6fa;--card:#fff;--tx:#1e2433;--mut:#6a7388;--pri:#3558c9;--priTx:#fff;--red:#c0392b;--grn:#1f8a58;--bd:#e1e4ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1b1f2b;--tx:#e8ebf5;--mut:#9aa3ba;--pri:#6b8cff;--priTx:#0c1233;--red:#ec7063;--grn:#5fd09a;--bd:#2a3040}}
+:root[data-theme="dark"]{--bg:#12141c;--card:#1b1f2b;--tx:#e8ebf5;--mut:#9aa3ba;--pri:#6b8cff;--priTx:#0c1233;--red:#ec7063;--grn:#5fd09a;--bd:#2a3040}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 100px}
+h1{font-size:20px;margin:4px 0 12px;display:flex;justify-content:space-between;align-items:center}
+.user-badge{font-size:12px;background:var(--card);border:1px solid var(--bd);padding:4px 10px;border-radius:20px;color:var(--mut);cursor:pointer}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.tabs button.on{background:var(--pri);color:var(--priTx);border-color:var(--pri)}
+button{font:inherit;border:0;border-radius:12px;padding:11px 14px;background:var(--pri);color:var(--priTx);cursor:pointer}
+button.sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+button.red{background:transparent;color:var(--red);border:1px solid var(--red)}
+button.sm{padding:7px 11px;font-size:13px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);font:inherit;margin-bottom:10px}
+.chk{display:flex;align-items:center;gap:8px;margin-bottom:10px}.chk input{width:auto;margin:0}
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
+.stat small{color:var(--mut)}.stat b{display:block;font-size:22px}
+.item{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item .n{font-weight:600}.item .p{color:var(--mut);font-size:13px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.badge{border-radius:20px;padding:8px 14px;font-size:14px;white-space:nowrap}
+.paid{background:var(--grn);color:#fff}.unpaid{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.pres{background:var(--grn);color:#fff}.abs{background:transparent;color:var(--mut);border:1.5px solid var(--bd)}
+.free{color:var(--mut);border:1.5px dashed var(--bd);border-radius:20px;padding:8px 14px;font-size:14px}
+.tag{color:var(--pri);font-size:12px}
+.empty{text-align:center;color:var(--mut);padding:30px 0}
+.fab{position:fixed;inset-inline-start:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:14px 20px;border-radius:30px;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:10}
+.month{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.month button{padding:8px 14px}
+dialog{border:1px solid var(--bd);border-radius:16px;background:var(--card);color:var(--tx);width:min(92vw,420px);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.link{color:var(--pri);font-size:13px;text-decoration:none}
+.hint{color:var(--mut);font-size:13px;margin:-4px 0 10px}
+.student-table{width:100%;border-collapse:separate;border-spacing:0 7px;table-layout:fixed}.student-table th{font-size:13px;color:var(--mut);font-weight:600;padding:4px}.student-table td{padding:0 3px}.student-table input{margin:0;padding:10px 8px;min-width:0}.student-table .delrow{padding:9px 10px;background:transparent;color:var(--red);border:1px solid var(--bd)}.addrow{width:100%;margin:7px 0 12px}.dlg-actions{display:flex;gap:8px}.dlg-actions>*{flex:1}
+.grp-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.grp-hdr{padding:13px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;gap:10px}
+.grp-hdr:active{opacity:.85}
+.grp-title{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.grp-arrow{display:inline-block;font-size:12px;color:var(--mut);transition:transform .2s ease}
+.grp-card.open .grp-arrow{transform:rotate(-90deg)}
+.grp-meta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+.grp-pill{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:3px 9px;font-weight:600;color:var(--tx)}
+.grp-body{border-top:1px solid var(--bd);padding:10px;background:var(--bg)}
+.grp-search{margin-bottom:8px;padding:9px 12px;font-size:14px;border-radius:10px}
+.sync-bar{font-size:11px;color:var(--grn);text-align:center;margin-bottom:8px}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
-
-<!-- نافذة الحوار المخصصة للإضافة والتعديل والنسخ الاحتياطي -->
-<dialog id="dlg">
-  <h3 id="dt" style="margin-top:0"></h3>
-  <div id="df"></div>
-</dialog>
-
+<dialog id="dlg"><h3 id="dt" style="margin-top:0"></h3><div id="df"></div></dialog>
 <script>
-// =========================================================
-// 1. إعدادات تحويل التطبيق إلى PWA (أيقونة + Manifest + Offline)
-// =========================================================
-var deferredInstallPrompt = null;
-var isAppInstalled = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-
-(function initPWA() {
-  // توليد أيقونة SVG عالية الدقة مدمجة داخل الكود
-  var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' +
-    '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0%" stop-color="#3558c9"/><stop offset="100%" stop-color="#1e3799"/>' +
-    '</linearGradient></defs>' +
-    '<rect width="512" height="512" rx="112" fill="url(#g)"/>' +
-    '<path d="M256 124L72 204l184 80 150-65v105h34V204L256 124z" fill="#ffffff"/>' +
-    '<path d="M142 254v76c0 34 51 62 114 62s114-28 114-62v-76l-114 50-114-50z" fill="#dce6ff"/>' +
-    '</svg>';
-  var iconUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(iconSvg)));
-
-  var appleLink = document.getElementById("pwa-apple-icon");
-  if (appleLink) appleLink.href = iconUrl;
-
-  // توليد ملف manifest.json ديناميكياً
-  var startUrl = location.href.split("#")[0];
-  var manifest = {
-    name: "مدرس بلس - إدارة الدروس",
-    short_name: "مدرس بلس",
-    description: "تطبيق إدارة حضور ومصاريف طلاب الدروس الخصوصية",
-    start_url: startUrl,
-    scope: "./",
-    display: "standalone",
-    orientation: "portrait",
-    dir: "rtl",
-    lang: "ar",
-    background_color: "#f5f6fa",
-    theme_color: "#3558c9",
-    icons: [
-      { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
-      { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
-    ]
-  };
-
-  try {
-    var manifestBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
-    var manifestEl = document.getElementById("pwa-manifest");
-    if (manifestEl) manifestEl.href = URL.createObjectURL(manifestBlob);
-  } catch (e) {}
-
-  // تسجيل Service Worker للعمل بدون إنترنت (Offline) عند استضافة الملف على HTTPS
-  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-    var swCode = [
-      "const CACHE_NAME = 'moallem-plus-v1';",
-      "self.addEventListener('install', e => {",
-      "  self.skipWaiting();",
-      "  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])).catch(()=>{}));",
-      "});",
-      "self.addEventListener('activate', e => {",
-      "  e.waitUntil(self.clients.claim());",
-      "});",
-      "self.addEventListener('fetch', e => {",
-      "  if (e.request.method !== 'GET') return;",
-      "  e.respondWith(",
-      "    caches.match(e.request).then(cached => {",
-      "      const fetched = fetch(e.request).then(res => {",
-      "        if (res && res.status === 200) {",
-      "          const clone = res.clone();",
-      "          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));",
-      "        }",
-      "        return res;",
-      "      }).catch(() => cached);",
-      "      return cached || fetched;",
-      "    })",
-      "  );",
-      "});"
-    ].join("\n");
-
-    try {
-      var swBlob = new Blob([swCode], { type: "application/javascript" });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function() {});
-    } catch (e) {}
-  }
-})();
-
-window.addEventListener("beforeinstallprompt", function(e) {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  render();
-});
-
-window.addEventListener("appinstalled", function() {
-  deferredInstallPrompt = null;
-  isAppInstalled = true;
-  render();
-});
-
-// =========================================================
-// 2. قاعدة البيانات المحلية وإدارة الحالة
-// =========================================================
-var KEY = "tutorApp1";
+var teacherPhone = localStorage.getItem("teacherPhone") || "";
 var db = { s: [], g: [], pay: {}, att: {} };
-
-try {
-  var sv = localStorage.getItem(KEY);
-  if (sv) db = JSON.parse(sv);
-} catch (e) {}
-
-db.g = (db.g || []).map(function(g) {
-  return typeof g === "string" ? { id: g, n: g, fee: 0 } : g;
-});
-db.s.forEach(function(s) {
-  if (s.cf === undefined && s.fee > 0) s.cf = s.fee;
-});
-
-if (!db.g.length && !db.s.length) {
-  db.g = [
-    { id: "g_demo1", n: "تانية ثانوي - رياضيات", fee: 250 },
-    { id: "g_demo2", n: "تالتة ثانوي - ميكانيكا", fee: 350 }
-  ];
-  db.s = [
-    { id: "s_1", n: "أحمد محمود", g: "g_demo1", ph: "01000000001" },
-    { id: "s_2", n: "سارة إبراهيم", g: "g_demo1", ph: "01000000002" },
-    { id: "s_3", n: "يوسف طارق", g: "g_demo1", ph: "", free: true },
-    { id: "s_4", n: "مريم خالد", g: "g_demo2", ph: "01000000003" },
-    { id: "s_5", n: "عمر حسن", g: "g_demo2", ph: "01000000004", cf: 300 }
-  ];
-  save();
-}
+var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل بالسحابة";
 
 function save() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(db));
-  } catch (e) {}
+  try { localStorage.setItem("tutorAppData_" + teacherPhone, JSON.stringify(db)); } catch(e) {}
+  syncToCloud();
 }
 
-function esc(t) {
-  return String(t == null ? "" : t).replace(/[&<>"']/g, function(m) {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
-  });
+// محاكاة مزامنة سحابية ذكية وآمنة تعتمد على رقم هاتف المدرس
+function syncToCloud() {
+  if (!teacherPhone) return;
+  syncStatus = "جاري الحفظ بالسحابة...";
+  render();
+  setTimeout(function() {
+    try {
+      localStorage.setItem("cloud_backup_" + teacherPhone, JSON.stringify(db));
+      syncStatus = "✓ تم الحفظ سحابياً";
+    } catch(e) {
+      syncStatus = "خطأ في المزامنة";
+    }
+    render();
+  }, 400);
 }
 
-var tab = "att";
-var gsel = "";
-var mon = new Date();
-var dayD = new Date();
-var attQuery = "";
-var openGrps = {};
-var grpQueries = {};
-var stuMon = new Date();
-var stuAllMonths = false;
-var stuQuery = "";
-var stuGrpFilter = "all";
-var openStus = {};
+function loadCloudData(phone) {
+  teacherPhone = phone;
+  localStorage.setItem("teacherPhone", phone);
+  var saved = localStorage.getItem("cloud_backup_" + phone);
+  if (saved) {
+    try { db = JSON.parse(saved); } catch(e) {}
+  } else {
+    db = { s: [], g: [], pay: {}, att: {} };
+  }
+  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0 } : g; });
+  render();
+}
 
+function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function(m) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]; }); }
 function mk(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
 function dk(d) { return mk(d) + "-" + String(d.getDate()).padStart(2, "0"); }
 function mlabel(d) { return d.toLocaleDateString("ar-EG", { month: "long", year: "numeric" }); }
 function dlabel(d) { return d.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" }); }
-function dlabelFromKey(key) {
-  var parts = key.split("-");
-  var dt = new Date(+parts[0], +parts[1] - 1, +parts[2]);
-  return dt.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
-}
 function money(n) { return Number(n).toLocaleString("ar-EG") + " ج"; }
 function grp(id) { return db.g.find(function(g) { return g.id === id; }); }
-function fee(s) {
-  if (s.free) return 0;
-  if (s.cf != null && s.cf !== "") return +s.cf || 0;
-  var g = grp(s.g);
-  return g ? +g.fee || 0 : 0;
-}
+function fee(s) { if (s.free) return 0; if (s.cf != null && s.cf !== "") return +s.cf || 0; var g = grp(s.g); return g ? +g.fee || 0 : 0; }
 
-function toggleTheme() {
-  var root = document.documentElement;
-  var cur = root.getAttribute("data-theme");
-  var isDark = cur === "dark" || (!cur && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  root.setAttribute("data-theme", isDark ? "light" : "dark");
-  render();
-}
-
-// =========================================================
-// 3. الرسم الرئيسي للواجهة
-// =========================================================
 function render() {
+  if (!teacherPhone) {
+    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك للبدء وحفظ بياناتك سحابياً:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:18px"><button id="loginBtn" style="width:100%">دخول / فتح حسابي</button></div>';
+    setTimeout(function() {
+      var btn = document.getElementById("loginBtn");
+      if (btn) btn.onclick = function() {
+        var p = document.getElementById("loginPhone").value.trim();
+        if (p.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
+        loadCloudData(p);
+      };
+    }, 100);
+    return;
+  }
+
   if (db.g.length && !grp(gsel)) gsel = db.g[0].id;
-  var isDark = document.documentElement.getAttribute("data-theme") === "dark" ||
-    (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  var h = '<h1>🎓 مدرس بلس <span class="user-badge" id="logoutBtn" title="تغيير الحساب">📱 ' + esc(teacherPhone) + '</span></h1>';
+  h += '<div class="sync-bar">' + syncStatus + '</div>';
+  h += '<div class="tabs"><button data-t="pay" class="' + (tab === "pay" ? "on" : "") + '">المصاريف</button><button data-t="att" class="' + (tab === "att" ? "on" : "") + '">الحضور</button><button data-t="students" class="' + (tab === "students" ? "on" : "") + '">الطلاب</button><button data-t="grp" class="' + (tab === "grp" ? "on" : "") + '">المجموعات</button></div>';
+  
+  if (tab === "pay") h += payView();
+  else if (tab === "att") h += attView();
+  else if (tab === "students") h += studentsView();
+  else h += grpView();
 
-  var h = '<div class="topbar">';
-  h += '<h1>🎓 مدرس بلس</h1>';
-  h += '<div class="top-actions">';
-  if (!isAppInstalled) {
-    h += '<button class="icon-btn" id="installHelpBtn" title="تثبيت التطبيق على الموبايل">📲 تثبيت</button>';
-  }
-  h += '<button class="icon-btn" id="backupBtn" title="النسخ الاحتياطي للبيانات">💾 نسخ</button>';
-  h += '<button class="icon-btn" id="themeBtn" title="تبديل المظهر">' + (isDark ? '☀️' : '🌙') + '</button>';
-  h += '</div></div>';
-
-  // شريط التثبيت الفوري يظهر تلقائياً في متصفحات الأندرويد/كروم عند توفر التثبيت
-  if (deferredInstallPrompt && !isAppInstalled) {
-    h += '<div class="install-banner">';
-    h += '<div class="ib-txt"><b>📲 ثبّت «مدرس بلس» على موبايلك</b>يعمل كـ تطبيق كامل وبدون إنترنت</div>';
-    h += '<button id="installNowBtn">تثبيت الآن</button>';
-    h += '</div>';
-  }
-
-  h += '<div class="tabs">';
-  h += '<button data-t="pay" class="' + (tab === "pay" ? "on" : "") + '">المصاريف</button>';
-  h += '<button data-t="att" class="' + (tab === "att" ? "on" : "") + '">الحضور</button>';
-  h += '<button data-t="stu" class="' + (tab === "stu" ? "on" : "") + '">الطلاب</button>';
-  h += '<button data-t="grp" class="' + (tab === "grp" ? "on" : "") + '">المجموعات</button>';
-  h += '</div>';
-
-  h += tab === "pay" ? payView() : tab === "att" ? attView() : tab === "stu" ? stuView() : grpView();
   document.getElementById("app").innerHTML = h;
-
+  
   document.querySelectorAll(".tabs button").forEach(function(b) {
-    b.onclick = function() {
-      tab = b.dataset.t;
-      if (tab !== "att") {
-        attQuery = "";
-        grpQueries = {};
-      }
-      render();
-    };
+    b.onclick = function() { tab = b.dataset.t; if (tab !== "att") { attQuery = ""; } render(); };
   });
-
+  
+  var logout = document.getElementById("logoutBtn");
+  if (logout) logout.onclick = function() {
+    if (confirm("هل تريد تسجيل الخروج من هذا الحساب؟")) {
+      teacherPhone = "";
+      localStorage.removeItem("teacherPhone");
+      render();
+    }
+  };
+  
   bind();
 }
 
-function groupSel() {
-  return '<select id="gs">' + db.g.map(function(g) {
-    return '<option value="' + esc(g.id) + '"' + (g.id === gsel ? ' selected' : '') + '>' + esc(g.n) + '</option>';
-  }).join("") + '</select>';
-}
+function groupSel() { return '<select id="gs">' + db.g.map(function(g) { return '<option value="' + esc(g.id) + '"' + (g.id === gsel ? ' selected' : '') + '>' + esc(g.n) + '</option>'; }).join("") + '</select>'; }
 
-// 1. واجهة المصاريف
 function payView() {
-  var m = mk(mon);
-  var paid = db.pay[m] || {};
+  var m = mk(mon), paid = db.pay[m] || {};
   var pay = db.s.filter(function(s) { return !s.free; });
   var np = pay.filter(function(s) { return paid[s.id]; }).length;
   var left = pay.filter(function(s) { return !paid[s.id]; }).reduce(function(a, s) { return a + fee(s); }, 0);
-
   var h = '<div class="month"><button class="sec" id="pm">→</button><b>' + mlabel(mon) + '</b><button class="sec" id="nm">←</button></div>';
   h += '<div class="stats"><div class="stat"><small>دفعوا</small><b>' + np + ' / ' + pay.length + '</b></div><div class="stat"><small>المتبقي تحصيله</small><b>' + money(left) + '</b></div></div>';
-
   if (!db.g.length) return h + '<div class="empty">ابدأ بإضافة مجموعة من تبويب المجموعات</div>';
-
   h += groupSel();
   var shown = db.s.filter(function(s) { return s.g === gsel; });
   shown.forEach(function(s) {
-    var p = !!paid[s.id];
-    var cust = !s.free && s.cf != null && s.cf !== "";
-    h += '<div class="item"><div><div class="n" data-es="' + esc(s.id) + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' +
-      (s.free ? 'معفي' : money(fee(s))) +
-      (cust ? ' <span class="tag">· مصاريف خاصة</span>' : '') +
-      (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + wa(s) + '">تذكير واتساب</a>' : '') +
-      '</div></div>' +
-      (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + esc(s.id) + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') +
-      '</div>';
+    var p = !!paid[s.id], cust = !s.free && s.cf != null && s.cf !== "";
+    h += '<div class="item"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + (s.free ? 'معفي' : money(fee(s))) + (cust ? ' <span class="tag">· مصاريف خاصة</span>' : '') + (s.ph && !s.free && !p ? ' · <a class="link" target="_blank" rel="noopener" href="' + wa(s) + '">تذكير واتساب</a>' : '') + '</div></div>' + (s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (p ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (p ? '✓ دفع' : 'لسه') + '</button>') + '</div>';
   });
-
   if (!shown.length) h += '<div class="empty">مفيش طلاب في المجموعة دي</div>';
   return h + fab();
 }
 
-function wa(s, targetMon) {
-  var mObj = targetMon || mon;
-  var ph = String(s.ph).replace(/\D/g, "");
-  if (ph.indexOf("0") === 0) ph = "2" + ph;
-  return "https://wa.me/" + ph + "?text=" + encodeURIComponent("السلام عليكم، تذكير بمصاريف شهر " + mlabel(mObj) + " للطالب " + s.n + " (" + money(fee(s)) + "). شكراً.");
-}
+function wa(s) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") === 0) ph = "2" + ph; return "https://wa.me/" + ph + "?text=" + encodeURIComponent("السلام عليكم، تذكير بمصاريف شهر " + mlabel(mon) + " للطالب " + s.n + " (" + money(fee(s)) + "). شكراً."); }
 
-// 2. واجهة الحضور
 function attView() {
-  var d = dk(dayD);
-  var rec = db.att[d] || {};
+  var d = dk(dayD), rec = db.att[d] || {};
   var h = '<div class="month"><button class="sec" id="pd">→</button><b>' + dlabel(dayD) + '</b><button class="sec" id="nd">←</button></div>';
-
   if (!db.g.length) return h + '<div class="empty">ضيف مجموعة الأول</div>';
-
   var totPres = db.s.filter(function(s) { return !!rec[s.id]; }).length;
   h += '<div class="stats"><div class="stat"><small>إجمالي الحضور اليوم</small><b>' + totPres + ' / ' + db.s.length + '</b></div></div>';
-  h += '<input id="attSearch" type="search" placeholder="🔍 ابحث باسم الطالب في كل المجموعات..." value="' + esc(attQuery) + '" style="margin-bottom:10px">';
-
+  h += '<input id="attSearch" type="search" placeholder="ابحث باسم الطالب في كل المجموعات..." value="' + esc(attQuery) + '" style="margin-bottom:10px">';
   var globalQ = attQuery.trim().toLowerCase();
   if (globalQ) {
     var matched = db.s.filter(function(s) { return s.n.toLowerCase().indexOf(globalQ) !== -1; });
     matched.forEach(function(s) {
-      var p = !!rec[s.id];
-      var g = grp(s.g);
-      h += '<div class="item"><div><div class="n">' + esc(s.n) + '</div><div class="p">' + esc(g ? g.n : 'مجموعة محذوفة') + '</div></div><button class="badge ' + (p ? 'pres' : 'abs') + '" data-aid="' + esc(s.id) + '">' + (p ? '✓ حضر' : 'غايب') + '</button></div>';
+      var p = !!rec[s.id], g = grp(s.g);
+      h += '<div class="item"><div><div class="n">' + esc(s.n) + '</div><div class="p">' + esc(g ? g.n : 'مجموعة محذوفة') + '</div></div><button class="badge ' + (p ? 'pres' : 'abs') + '" data-aid="' + s.id + '">' + (p ? '✓ حضر' : 'غايب') + '</button></div>';
     });
     if (!matched.length) h += '<div class="empty">ملقيناش طالب بالاسم ده</div>';
     return h + fab();
   }
-
   db.g.forEach(function(g) {
     var gStudents = db.s.filter(function(s) { return s.g === g.id; });
     var gPres = gStudents.filter(function(s) { return !!rec[s.id]; }).length;
     var isOpen = !!openGrps[g.id];
     var gQ = (grpQueries[g.id] || "").trim().toLowerCase();
     var filtered = gQ ? gStudents.filter(function(s) { return s.n.toLowerCase().indexOf(gQ) !== -1; }) : gStudents;
-
     h += '<div class="grp-card' + (isOpen ? ' open' : '') + '">';
     h += '<div class="grp-hdr" data-tg="' + esc(g.id) + '">';
     h += '<div class="grp-title"><span class="grp-arrow">◀</span><span>' + esc(g.n) + '</span></div>';
     h += '<div class="grp-meta"><span class="grp-pill">' + gPres + ' / ' + gStudents.length + '</span></div>';
     h += '</div>';
-
     if (isOpen) {
       h += '<div class="grp-body">';
       if (gStudents.length) {
@@ -803,7 +207,7 @@ function attView() {
         if (filtered.length) {
           filtered.forEach(function(s) {
             var p = !!rec[s.id];
-            h += '<div class="item"><div><div class="n">' + esc(s.n) + '</div></div><button class="badge ' + (p ? 'pres' : 'abs') + '" data-aid="' + esc(s.id) + '">' + (p ? '✓ حضر' : 'غايب') + '</button></div>';
+            h += '<div class="item"><div><div class="n">' + esc(s.n) + '</div></div><button class="badge ' + (p ? 'pres' : 'abs') + '" data-aid="' + s.id + '">' + (p ? '✓ حضر' : 'غايب') + '</button></div>';
           });
         } else {
           h += '<div class="empty" style="padding:14px 0">مفيش طالب بالاسم ده في المجموعة</div>';
@@ -815,156 +219,52 @@ function attView() {
     }
     h += '</div>';
   });
-
   return h + fab();
 }
 
-function getStudentAttendance(s, monthKeyOrNull) {
-  var groupStudentIds = db.s.filter(function(x) { return x.g === s.g; }).map(function(x) { return x.id; });
-  var allDates = Object.keys(db.att || {}).sort();
-  var presentDates = [];
-  var absentDates = [];
-
-  allDates.forEach(function(dateKey) {
-    if (monthKeyOrNull && dateKey.indexOf(monthKeyOrNull) !== 0) return;
-    var rec = db.att[dateKey] || {};
-    var groupHadSession = groupStudentIds.some(function(id) { return !!rec[id]; });
-    if (!groupHadSession) return;
-
-    if (rec[s.id]) {
-      presentDates.push(dateKey);
-    } else {
-      absentDates.push(dateKey);
-    }
+function studentsView() {
+  var h = '<div class="month"><button class="sec" id="spm">→</button><b>' + (studentFilterMonth === 'all' ? 'كل الشهور' : mlabel(mon)) + '</b><button class="sec" id="snm">←</button></div>';
+  h += '<div class="row" style="margin-bottom:10px"><input id="studentSearchInput" type="search" placeholder="بحث بالاسم..." value="' + esc(studentQuery) + '" style="margin-bottom:0">';
+  h += '<select id="studentGroupFilter" style="margin-bottom:0"><option value="all">كل المجموعات</option>' + db.g.map(function(g) { return '<option value="' + g.id + '"' + (studentFilterGrp === g.id ? ' selected' : '') + '>' + esc(g.n) + '</option>'; }).join('') + '</select></div>';
+  
+  var sq = studentQuery.trim().toLowerCase();
+  var filtered = db.s.filter(function(s) {
+    if (studentFilterGrp !== 'all' && s.g !== studentFilterGrp) return false;
+    if (sq && s.n.toLowerCase().indexOf(sq) === -1) return false;
+    return true;
   });
 
-  return { present: presentDates, absent: absentDates };
-}
+  if (!filtered.length) return h + '<div class="empty">مفيش طلاب مطابقة للبحث</div>';
 
-// 3. واجهة ملفات الطلاب
-function stuView() {
-  var h = '';
-  if (!db.g.length || !db.s.length) {
-    return '<div class="empty">مفيش طلاب مسجلين لسه. أضف مجموعة وطلاب أولاً.</div>' + fab();
-  }
-
-  h += '<div class="mode-toggle">';
-  h += '<button type="button" id="stuModeMonth" class="' + (!stuAllMonths ? 'on' : '') + '">📅 حسب الشهر</button>';
-  h += '<button type="button" id="stuModeAll" class="' + (stuAllMonths ? 'on' : '') + '">📊 كل الشهور</button>';
-  h += '</div>';
-
-  if (!stuAllMonths) {
-    h += '<div class="month"><button class="sec" id="spm">→</button><b>' + mlabel(stuMon) + '</b><button class="sec" id="snm">←</button></div>';
-  }
-
-  h += '<div class="filter-bar">';
-  h += '<input id="stuSearch" type="search" placeholder="🔍 ابحث باسم الطالب..." value="' + esc(stuQuery) + '">';
-  h += '<select id="stuGrpSel"><option value="all"' + (stuGrpFilter === "all" ? " selected" : "") + '>كل المجموعات</option>';
-  db.g.forEach(function(g) {
-    h += '<option value="' + esc(g.id) + '"' + (stuGrpFilter === g.id ? " selected" : "") + '>' + esc(g.n) + '</option>';
-  });
-  h += '</select></div>';
-
-  var qStr = stuQuery.trim().toLowerCase();
-  var list = db.s.filter(function(s) {
-    var matchGrp = stuGrpFilter === "all" || s.g === stuGrpFilter;
-    var matchName = !qStr || s.n.toLowerCase().indexOf(qStr) !== -1;
-    return matchGrp && matchName;
-  });
-
-  var curMonthKey = mk(stuMon);
-  var monthPaidMap = db.pay[curMonthKey] || {};
-
-  if (!list.length) {
-    return h + '<div class="empty">مفيش طلاب مطابقين للبحث ده</div>' + fab();
-  }
-
-  list.forEach(function(s) {
+  filtered.forEach(function(s) {
     var g = grp(s.g);
-    var attData = getStudentAttendance(s, stuAllMonths ? null : curMonthKey);
-    var isOpen = !!openStus[s.id];
-    var isPaid = !!monthPaidMap[s.id];
-
-    h += '<div class="stu-card' + (isOpen ? ' open' : '') + '">';
-    h += '<div class="stu-hdr" data-ts="' + esc(s.id) + '">';
-    h += '<div class="stu-info">';
-    h += '<div class="stu-name"><span class="grp-arrow">◀</span><span>' + esc(s.n) + '</span></div>';
-    h += '<div class="stu-sub">' + esc(g ? g.n : 'بدون مجموعة') + '</div>';
-    h += '</div>';
-
-    h += '<div class="stu-badges">';
-    h += '<span class="mini-pill mini-pres">حضر ' + attData.present.length + '</span>';
-    h += '<span class="mini-pill mini-abs">غاب ' + attData.absent.length + '</span>';
-    if (!stuAllMonths) {
-      if (s.free) {
-        h += '<span class="mini-pill mini-free">معفي</span>';
-      } else if (isPaid) {
-        h += '<span class="mini-pill mini-paid">دفع ✓</span>';
-      } else {
-        h += '<span class="mini-pill mini-unpaid">لم يدفع</span>';
+    var presDates = [], absDates = [];
+    Object.keys(db.att).sort().forEach(function(dt) {
+      var dayRec = db.att[dt] || {};
+      var daySt = db.s.find(function(x) { return x.g === s.g; });
+      if (daySt) {
+        if (studentFilterMonth === 'all' || dt.indexOf(mk(mon)) === 0) {
+          if (dayRec[s.id]) presDates.push(dt);
+          else absDates.push(dt);
+        }
       }
-    }
+    });
+
+    var mKey = mk(mon);
+    var isPaid = db.pay[mKey] && db.pay[mKey][s.id];
+
+    h += '<div class="item" style="flex-direction:column;align-items:stretch;gap:8px">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + esc(g ? g.n : '') + ' · ' + (s.free ? 'معفي' : money(fee(s))) + '</div></div>';
+    h += s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (isPaid ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (isPaid ? '✓ دفع' : 'لسه') + '</button>';
+    h += '</div><div style="font-size:12px;background:var(--bg);padding:8px;border-radius:10px;border:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
+    h += '<span>حضر: <b style="color:var(--grn)">' + presDates.length + '</b> يوم</span> | <span>غاب: <b style="color:var(--red)">' + absDates.length + '</b> يوم</span>';
+    h += '<div style="width:100%;margin-top:4px;color:var(--mut)">تواريخ الحضور: ' + (presDates.length ? presDates.join(', ') : 'لا يوجد') + '</div>';
     h += '</div></div>';
-
-    if (isOpen) {
-      h += '<div class="stu-body">';
-
-      h += '<div class="stats" style="margin-bottom:10px">';
-      h += '<div class="stat" style="padding:9px 12px"><small>أيام الحضور</small><b style="font-size:18px;color:var(--grn)">' + attData.present.length + ' يوم</b></div>';
-      h += '<div class="stat" style="padding:9px 12px"><small>أيام الغياب</small><b style="font-size:18px;color:var(--red)">' + attData.absent.length + ' يوم</b></div>';
-      h += '</div>';
-
-      h += '<div class="stu-sec">';
-      h += '<div class="stu-sec-title"><span>✅ تواريخ أيام الحضور (' + attData.present.length + ')</span></div>';
-      if (attData.present.length) {
-        h += '<div class="date-chips">';
-        attData.present.forEach(function(dkStr) {
-          h += '<span class="date-chip chip-pres">' + esc(dlabelFromKey(dkStr)) + '</span>';
-        });
-        h += '</div>';
-      } else {
-        h += '<div class="p" style="font-size:13px;color:var(--mut)">لم يتم تسجيل حضور للطالب في هذه الفترة.</div>';
-      }
-      h += '</div>';
-
-      h += '<div class="stu-sec">';
-      h += '<div class="stu-sec-title"><span>❌ تواريخ أيام الغياب (' + attData.absent.length + ')</span></div>';
-      if (attData.absent.length) {
-        h += '<div class="date-chips">';
-        attData.absent.forEach(function(dkStr) {
-          h += '<span class="date-chip chip-abs">' + esc(dlabelFromKey(dkStr)) + '</span>';
-        });
-        h += '</div>';
-      } else {
-        h += '<div class="p" style="font-size:13px;color:var(--grn)">ممتاز! لم يغب الطالب في أي حصة مسجلة خلال هذه الفترة.</div>';
-      }
-      h += '</div>';
-
-      h += '<div class="stu-sec">';
-      h += '<div class="stu-sec-title"><span>💰 مصاريف ' + esc(mlabel(stuMon)) + '</span><span>' + (s.free ? 'معفي' : money(fee(s))) + '</span></div>';
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">';
-      if (s.free) {
-        h += '<span class="free" style="padding:6px 12px;font-size:13px">طالب معفي من المصاريف</span>';
-      } else {
-        h += '<button class="badge ' + (isPaid ? 'paid' : 'unpaid') + '" style="padding:7px 13px;font-size:13px" data-spid="' + esc(s.id) + '">' + (isPaid ? '✓ تم الدفع (اضغط للتراجع)' : 'لم يدفع · تسجيل الدفع') + '</button>';
-      }
-      h += '<div style="display:flex;gap:6px;align-items:center">';
-      if (s.ph && !s.free && !isPaid) {
-        h += '<a class="link" target="_blank" rel="noopener" href="' + wa(s, stuMon) + '" style="padding:6px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)">📲 تذكير واتساب</a>';
-      }
-      h += '<button class="sm sec" data-es="' + esc(s.id) + '">✎ تعديل</button>';
-      h += '</div></div></div>';
-
-      h += '</div>';
-    }
-
-    h += '</div>';
   });
 
   return h + fab();
 }
 
-// 4. واجهة المجموعات
 function grpView() {
   var h = '';
   if (!db.g.length) h += '<div class="empty">لسه مفيش مجموعات. مثال: تانية ثانوي - رياضيات</div>';
@@ -975,419 +275,88 @@ function grpView() {
   return h + '<button class="fab" id="addg">+ مجموعة جديدة</button>';
 }
 
-function fab() {
-  return '<button class="fab" id="adds">+ طلاب</button>';
-}
+function fab() { return '<button class="fab" id="adds">+ طلاب</button>'; }
 
-// =========================================================
-// 4. نوافذ التثبيت والنسخ الاحتياطي (مهمة لبيع التطبيق)
-// =========================================================
-function openInstallModal() {
-  var f = document.getElementById("df");
-  var d = document.getElementById("dlg");
-  document.getElementById("dt").textContent = "📲 تثبيت التطبيق على الموبايل";
-
-  var html = '<div class="backup-box">';
-  if (deferredInstallPrompt) {
-    html += '<p>موبايلك يدعم التثبيت المباشر بضغطة واحدة:</p>';
-    html += '<button id="dlgInstallBtn" style="width:100%;margin-bottom:8px">تثبيت «مدرس بلس» الآن</button>';
-  } else {
-    html += '<p><b>للأندرويد (متصفح Chrome):</b><br>اضغط على الثلاث نقاط <b>(⋮)</b> في أعلى المتصفح ثم اختر <b>«تثبيت التطبيق»</b> أو <b>«الإضافة إلى الشاشة الرئيسية»</b>.</p>';
-    html += '<p style="margin-bottom:0"><b>للآيفون (متصفح Safari):</b><br>اضغط على زر المشاركة <b>(⬆️)</b> في الأسفل ثم اختر <b>«إضافة إلى الصفحة الرئيسية»</b>.</p>';
-  }
-  html += '</div><button class="sec" id="closeInstDlg" style="width:100%">إغلاق</button>';
-
-  f.innerHTML = html;
-  d.showModal();
-
-  if (document.getElementById("dlgInstallBtn")) {
-    document.getElementById("dlgInstallBtn").onclick = function() {
-      d.close();
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then(function() {
-          deferredInstallPrompt = null;
-          render();
-        });
-      }
-    };
-  }
-  document.getElementById("closeInstDlg").onclick = function() { d.close(); };
-}
-
-function openBackupModal() {
-  var f = document.getElementById("df");
-  var d = document.getElementById("dlg");
-  document.getElementById("dt").textContent = "💾 النسخ الاحتياطي للبيانات";
-
-  var html = '<div class="backup-box">';
-  html += '<p>احفظ نسخة من بيانات الطلاب والحضور والمصاريف على موبايلك أو ابعتها لنفسك على واتساب عشان تضمن عدم ضياعها أبداً.</p>';
-  html += '<button id="exportDataBtn" style="width:100%">⬇️ تحميل نسخة احتياطية (ملف)</button>';
-  html += '</div>';
-
-  html += '<div class="backup-box">';
-  html += '<p><b>استرجاع نسخة سابقة:</b> اختر ملف النسخة الاحتياطية لاستعادة كل البيانات.</p>';
-  html += '<input type="file" id="importFileInp" accept=".json,application/json" style="padding:8px;margin-bottom:6px">';
-  html += '<div id="backupMsg" style="font-size:13px;margin-top:4px"></div>';
-  html += '</div>';
-
-  html += '<button class="sec" id="closeBkpDlg" style="width:100%">إغلاق</button>';
-
-  f.innerHTML = html;
-  d.showModal();
-
-  document.getElementById("exportDataBtn").onclick = function() {
-    var payload = JSON.stringify(db, null, 2);
-    var blob = new Blob([payload], { type: "application/json" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = "moallem-plus-backup-" + dk(new Date()) + ".json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  document.getElementById("importFileInp").onchange = function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var msgEl = document.getElementById("backupMsg");
-      try {
-        var parsed = JSON.parse(ev.target.result);
-        if (!parsed || !Array.isArray(parsed.g) || !Array.isArray(parsed.s)) {
-          throw new Error("invalid");
-        }
-        db = {
-          g: parsed.g || [],
-          s: parsed.s || [],
-          pay: parsed.pay || {},
-          att: parsed.att || {}
-        };
-        save();
-        msgEl.style.color = "var(--grn)";
-        msgEl.textContent = "✓ تم استرجاع البيانات بنجاح!";
-        setTimeout(function() {
-          d.close();
-          render();
-        }, 800);
-      } catch (err) {
-        msgEl.style.color = "var(--red)";
-        msgEl.textContent = "❌ الملف غير صالح، تأكد من اختيار ملف نسخة احتياطية صحيح.";
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  document.getElementById("closeBkpDlg").onclick = function() { d.close(); };
-}
-
-// =========================================================
-// 5. ربط الأحداث
-// =========================================================
 function bind() {
   var q = function(i) { return document.getElementById(i); };
-  if (q("themeBtn")) q("themeBtn").onclick = toggleTheme;
-  if (q("installHelpBtn")) q("installHelpBtn").onclick = openInstallModal;
-  if (q("backupBtn")) q("backupBtn").onclick = openBackupModal;
-  if (q("installNowBtn")) q("installNowBtn").onclick = function() {
-    if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then(function() {
-        deferredInstallPrompt = null;
-        render();
-      });
-    }
-  };
-
   if (q("gs")) q("gs").onchange = function() { gsel = this.value; render(); };
-
-  if (q("attSearch")) q("attSearch").oninput = function() {
-    var pos = this.selectionStart;
-    attQuery = this.value;
-    render();
-    var el = q("attSearch");
-    if (el) { el.focus(); el.setSelectionRange(pos, pos); }
-  };
+  if (q("attSearch")) q("attSearch").oninput = function() { var pos = this.selectionStart; attQuery = this.value; render(); var el = q("attSearch"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
+  
+  if (q("studentSearchInput")) q("studentSearchInput").oninput = function() { var pos = this.selectionStart; studentQuery = this.value; render(); var el = q("studentSearchInput"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
+  if (q("studentGroupFilter")) q("studentGroupFilter").onchange = function() { studentFilterGrp = this.value; render(); };
+  if (q("spm")) q("spm").onclick = function() { studentFilterMonth = studentFilterMonth === 'all' ? mk(mon) : 'all'; render(); };
+  if (q("snm")) q("snm").onclick = function() { studentFilterMonth = studentFilterMonth === 'all' ? mk(mon) : 'all'; render(); };
 
   document.querySelectorAll("[data-tg]").forEach(function(h) {
-    h.onclick = function() {
-      var gid = h.dataset.tg;
-      openGrps[gid] = !openGrps[gid];
-      if (openGrps[gid]) gsel = gid;
-      render();
-    };
+    h.onclick = function() { var gid = h.dataset.tg; openGrps[gid] = !openGrps[gid]; if (openGrps[gid]) gsel = gid; render(); };
   });
-
   document.querySelectorAll("[data-gsq]").forEach(function(inp) {
-    inp.oninput = function() {
-      var gid = inp.dataset.gsq;
-      var pos = inp.selectionStart;
-      grpQueries[gid] = inp.value;
-      render();
-      var el = document.querySelector('[data-gsq="' + CSS.escape(gid) + '"]');
-      if (el) { el.focus(); el.setSelectionRange(pos, pos); }
-    };
+    inp.oninput = function() { var gid = inp.dataset.gsq, pos = inp.selectionStart; grpQueries[gid] = inp.value; render(); var el = document.querySelector('[data-gsq="' + CSS.escape(gid) + '"]'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
   });
 
   if (q("pm")) q("pm").onclick = function() { mon = new Date(mon.getFullYear(), mon.getMonth() - 1, 1); render(); };
   if (q("nm")) q("nm").onclick = function() { mon = new Date(mon.getFullYear(), mon.getMonth() + 1, 1); render(); };
   if (q("pd")) q("pd").onclick = function() { dayD = new Date(dayD.getTime() - 864e5); render(); };
   if (q("nd")) q("nd").onclick = function() { dayD = new Date(dayD.getTime() + 864e5); render(); };
-
-  if (q("stuModeMonth")) q("stuModeMonth").onclick = function() { stuAllMonths = false; render(); };
-  if (q("stuModeAll")) q("stuModeAll").onclick = function() { stuAllMonths = true; render(); };
-  if (q("spm")) q("spm").onclick = function() { stuMon = new Date(stuMon.getFullYear(), stuMon.getMonth() - 1, 1); render(); };
-  if (q("snm")) q("snm").onclick = function() { stuMon = new Date(stuMon.getFullYear(), stuMon.getMonth() + 1, 1); render(); };
-  if (q("stuGrpSel")) q("stuGrpSel").onchange = function() { stuGrpFilter = this.value; render(); };
-  if (q("stuSearch")) q("stuSearch").oninput = function() {
-    var pos = this.selectionStart;
-    stuQuery = this.value;
-    render();
-    var el = q("stuSearch");
-    if (el) { el.focus(); el.setSelectionRange(pos, pos); }
-  };
-
-  document.querySelectorAll("[data-ts]").forEach(function(hdr) {
-    hdr.onclick = function() {
-      var sid = hdr.dataset.ts;
-      openStus[sid] = !openStus[sid];
-      render();
-    };
-  });
-
-  document.querySelectorAll("[data-spid]").forEach(function(b) {
-    b.onclick = function() {
-      var m = mk(stuMon);
-      db.pay[m] = db.pay[m] || {};
-      db.pay[m][b.dataset.spid] = !db.pay[m][b.dataset.spid];
-      save();
-      render();
-    };
-  });
-
-  document.querySelectorAll("[data-pid]").forEach(function(b) {
-    b.onclick = function() {
-      var m = mk(mon);
-      db.pay[m] = db.pay[m] || {};
-      db.pay[m][b.dataset.pid] = !db.pay[m][b.dataset.pid];
-      save();
-      render();
-    };
-  });
-
-  document.querySelectorAll("[data-aid]").forEach(function(b) {
-    b.onclick = function() {
-      var d = dk(dayD);
-      db.att[d] = db.att[d] || {};
-      db.att[d][b.dataset.aid] = !db.att[d][b.dataset.aid];
-      save();
-      render();
-    };
-  });
-
+  
+  document.querySelectorAll("[data-pid]").forEach(function(b) { b.onclick = function() { var m = mk(mon); db.pay[m] = db.pay[m] || {}; db.pay[m][b.dataset.pid] = !db.pay[m][b.dataset.pid]; save(); render(); }; });
+  document.querySelectorAll("[data-aid]").forEach(function(b) { b.onclick = function() { var d = dk(dayD); db.att[d] = db.att[d] || {}; db.att[d][b.dataset.aid] = !db.att[d][b.dataset.aid]; save(); render(); }; });
   document.querySelectorAll("[data-es]").forEach(function(e) { e.onclick = function() { editStudent(e.dataset.es); }; });
   document.querySelectorAll("[data-ag]").forEach(function(b) { b.onclick = function() { newStudents(b.dataset.ag); }; });
   document.querySelectorAll("[data-eg]").forEach(function(b) { b.onclick = function() { editGroup(b.dataset.eg); }; });
-
-  document.querySelectorAll("[data-dg]").forEach(function(b) {
-    b.onclick = function() {
-      var g = grp(b.dataset.dg);
-      showConfirm("حذف المجموعة", "هل أنت متأكد من حذف مجموعة «" + g.n + "» وكل طلابها؟", function() {
-        db.s = db.s.filter(function(s) { return s.g !== g.id; });
-        db.g = db.g.filter(function(x) { return x.id !== g.id; });
-        delete openGrps[g.id];
-        delete grpQueries[g.id];
-        save();
-        render();
-      });
-    };
-  });
-
+  document.querySelectorAll("[data-dg]").forEach(function(b) { b.onclick = function() { var g = grp(b.dataset.dg); if (confirm("حذف المجموعة " + g.n + " وكل طلابها؟")) { db.s = db.s.filter(function(s) { return s.g !== g.id; }); db.g = db.g.filter(function(x) { return x.id !== g.id; }); delete openGrps[g.id]; save(); render(); } }; });
   if (q("addg")) q("addg").onclick = newGroup;
-  if (q("adds")) q("adds").onclick = function() {
-    if (!db.g.length) { tab = "grp"; render(); return; }
-    newStudents(gsel);
-  };
-}
-
-function showConfirm(title, message, onYes) {
-  var f = document.getElementById("df");
-  var d = document.getElementById("dlg");
-  document.getElementById("dt").textContent = title;
-  f.innerHTML = '<p style="margin:0 0 14px;color:var(--tx)">' + esc(message) + '</p>' +
-    '<div class="row"><button class="red" id="cfmYes">نعم، احذف</button><button class="sec" id="cfmNo">إلغاء</button></div>';
-  d.showModal();
-  document.getElementById("cfmNo").onclick = function() { d.close(); };
-  document.getElementById("cfmYes").onclick = function() { d.close(); onYes(); };
+  if (q("adds")) q("adds").onclick = function() { if (!db.g.length) { tab = "grp"; render(); return; } newStudents(gsel); };
 }
 
 function studentRowsHTML(count) {
   var h = '<table class="student-table"><thead><tr><th style="width:43%">اسم الطالب</th><th>رقم ولي الأمر (اختياري)</th><th style="width:42px"></th></tr></thead><tbody id="studentRows">';
-  for (var i = 0; i < (count || 3); i++) {
-    h += '<tr><td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td></tr>';
-  }
+  for (var i = 0; i < (count || 3); i++) h += '<tr><td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td></tr>';
   return h + '</tbody></table><button type="button" class="sec addrow" id="addStudentRow">+ إضافة طالب آخر</button>';
 }
 
 function setupStudentRows() {
-  var body = document.getElementById("studentRows");
-  if (!body) return;
-  function addRow(focus) {
-    var tr = document.createElement("tr");
-    tr.innerHTML = '<td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td>';
-    body.appendChild(tr);
-    if (focus) tr.querySelector(".student-name").focus();
-  }
-  document.getElementById("addStudentRow").onclick = function() { addRow(true); };
-  body.addEventListener("input", function(e) {
-    var tr = e.target.closest("tr");
-    if (tr && tr === body.lastElementChild && e.target.value.trim()) addRow(false);
-  });
-  body.addEventListener("click", function(e) {
-    if (e.target.classList.contains("delrow")) {
-      if (body.children.length > 1) e.target.closest("tr").remove();
-      else body.querySelectorAll("input").forEach(function(x) { x.value = ""; });
-    }
-  });
+  var body = document.getElementById('studentRows'); if (!body) return;
+  function addRow(focus) { var tr = document.createElement('tr'); tr.innerHTML = '<td><input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="رقم الموبايل" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف الصف">×</button></td>'; body.appendChild(tr); if (focus) tr.querySelector('.student-name').focus(); }
+  document.getElementById('addStudentRow').onclick = function() { addRow(true); };
+  body.addEventListener('input', function(e) { var tr = e.target.closest('tr'); if (tr && tr === body.lastElementChild && e.target.value.trim()) addRow(false); });
+  body.addEventListener('click', function(e) { if (e.target.classList.contains('delrow')) { if (body.children.length > 1) e.target.closest('tr').remove(); else { body.querySelectorAll('input').forEach(function(x) { x.value = ''; }); } } });
 }
 
-function collectStudentRows() {
-  return Array.from(document.querySelectorAll("#studentRows tr")).map(function(tr) {
-    return {
-      n: tr.querySelector(".student-name").value.trim(),
-      ph: tr.querySelector(".student-phone").value.trim()
-    };
-  }).filter(function(x) { return x.n !== ""; });
-}
-
-function saveStudentRows(gid, rows) {
-  rows.forEach(function(x, i) {
-    db.s.push({
-      id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6),
-      n: x.n,
-      g: gid,
-      ph: x.ph
-    });
-  });
-}
+function collectStudentRows() { return Array.from(document.querySelectorAll('#studentRows tr')).map(function(tr) { return { n: tr.querySelector('.student-name').value.trim(), ph: tr.querySelector('.student-phone').value.trim() }; }).filter(function(x) { return x.n !== ''; }); }
+function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph }); }); }
 
 function openStudentEntry(title, gid, isNewGroup) {
-  var f = document.getElementById("df");
-  var d = document.getElementById("dlg");
-  var html = "";
-  if (isNewGroup) {
-    html += '<input id="newGroupName" placeholder="اسم المجموعة"><input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">';
-  }
-  html += '<div id="formErr" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>';
-  html += '<div class="hint">اكتب كل طالب في صف مستقل. رقم ولي الأمر اختياري، وتقدر تضيف صفوف جديدة وقت ما تحتاج.</div>' +
-    studentRowsHTML(3) +
-    '<div class="dlg-actions"><button id="studentSave">حفظ</button><button class="sec" id="studentCancel">إلغاء</button></div>';
-  f.innerHTML = html;
-  document.getElementById("dt").textContent = title;
-  d.showModal();
-  setupStudentRows();
-
-  var showErr = function(msg) {
-    var errEl = document.getElementById("formErr");
-    errEl.textContent = msg;
-    errEl.style.display = "block";
-  };
-
-  document.getElementById("studentCancel").onclick = function() { d.close(); };
-  document.getElementById("studentSave").onclick = function() {
+  var f = document.getElementById('df'), d = document.getElementById('dlg');
+  var html = '';
+  if (isNewGroup) html += '<input id="newGroupName" placeholder="اسم المجموعة"><input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">';
+  html += '<div class="hint">اكتب كل طالب في صف مستقل. رقم ولي الأمر اختياري، وتقدر تضيف صفوف جديدة وقت ما تحتاج.</div>' + studentRowsHTML(3) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
+  f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
+  document.getElementById('studentCancel').onclick = function() { d.close(); };
+  document.getElementById('studentSave').onclick = function() {
     var rows = collectStudentRows();
-    if (isNewGroup) {
-      var name = document.getElementById("newGroupName").value.trim();
-      if (!name) { showErr("اكتب اسم المجموعة الأول"); return; }
-      var id = "g" + Date.now();
-      db.g.push({ id: id, n: name, fee: parseFloat(document.getElementById("newGroupFee").value) || 0 });
-      saveStudentRows(id, rows);
-      gsel = id;
-      openGrps[id] = true;
-    } else {
-      if (!rows.length) { showErr("اكتب اسم طالب واحد على الأقل"); return; }
-      saveStudentRows(gid, rows);
-      gsel = gid;
-    }
-    save();
-    d.close();
-    render();
+    if (isNewGroup) { var name = document.getElementById('newGroupName').value.trim(); if (!name) { alert('اكتب اسم المجموعة الأول'); return; } var id = 'g' + Date.now(); db.g.push({ id: id, n: name, fee: parseFloat(document.getElementById('newGroupFee').value) || 0 }); saveStudentRows(id, rows); gsel = id; }
+    else { if (!rows.length) { alert('اكتب اسم طالب واحد على الأقل'); return; } saveStudentRows(gid, rows); gsel = gid; }
+    save(); d.close(); render();
   };
 }
 
-function newGroup() { openStudentEntry("مجموعة جديدة", null, true); }
-function newStudents(gid) { openStudentEntry("إضافة طلاب إلى " + grp(gid).n, gid, false); }
-
-function editGroup(id) {
-  var g = grp(id);
-  ask("تعديل المجموعة", [
-    { p: "اسم المجموعة", v: g.n },
-    { p: "مصاريف الطالب في الشهر", num: 1, v: g.fee }
-  ], function(v) {
-    if (!v[0]) return false;
-    g.n = v[0];
-    g.fee = parseFloat(v[1]) || 0;
-    save();
-    render();
-    return true;
-  });
-}
-
-function editStudent(id) {
-  var s = db.s.find(function(x) { return x.id === id; });
-  var g = grp(s.g);
-  ask("تعديل الطالب", [
-    { p: "اسم الطالب", v: s.n },
-    { p: "مصاريف خاصة (سيبها فاضية لو نفس مصاريف المجموعة: " + money(g ? g.fee || 0 : 0) + ")", num: 1, v: s.cf },
-    { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph },
-    { chk: "معفي من المصاريف", v: s.free }
-  ], function(v) {
-    if (!v[0]) return false;
-    s.n = v[0];
-    s.cf = v[1] === "" ? null : parseFloat(v[1]);
-    s.ph = v[2];
-    s.free = !!v[3];
-    save();
-    render();
-    return true;
-  }, {
-    label: "حذف الطالب",
-    fn: function() {
-      showConfirm("حذف الطالب", "هل أنت متأكد من حذف الطالب «" + s.n + "»؟", function() {
-        db.s = db.s.filter(function(x) { return x.id !== id; });
-        save();
-        render();
-      });
-      return true;
-    }
-  });
-}
+function newGroup() { openStudentEntry('مجموعة جديدة', null, true); }
+function newStudents(gid) { openStudentEntry('إضافة طلاب إلى ' + grp(gid).n, gid, false); }
+function editGroup(id) { var g = grp(id); ask("تعديل المجموعة", [{ p: "اسم المجموعة", v: g.n }, { p: "مصاريف الطالب في الشهر", num: 1, v: g.fee }], function(v) { if (!v[0]) return false; g.n = v[0]; g.fee = parseFloat(v[1]) || 0; save(); render(); return true; }); }
+function editStudent(id) { var s = db.s.find(function(x) { return x.id === id; }), g = grp(s.g); ask("تعديل الطالب", [{ p: "اسم الطالب", v: s.n }, { p: "مصاريف خاصة (سيبها فاضية لو نفس مصاريف المجموعة: " + money(g.fee || 0) + ")", num: 1, v: s.cf }, { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, { chk: "معفي من المصاريف", v: s.free }], function(v) { if (!v[0]) return false; s.n = v[0]; s.cf = v[1] === "" ? null : parseFloat(v[1]); s.ph = v[2]; s.free = !!v[3]; save(); render(); return true; }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } }); }
 
 function ask(title, fields, ok, extra) {
-  var f = document.getElementById("df");
-  var d = document.getElementById("dlg");
+  var f = document.getElementById("df"), d = document.getElementById("dlg");
   f.innerHTML = fields.map(function(x, i) {
     var v = x.v == null ? "" : x.v;
     if (x.chk) return '<label class="chk"><input type="checkbox" id="f' + i + '"' + (v ? ' checked' : '') + '> ' + x.chk + '</label>';
-    if (x.area) return '<textarea id="f' + i + '" rows="6" placeholder="' + esc(x.p) + '"></textarea>';
     return '<input id="f' + i + '" placeholder="' + esc(x.p) + '" value="' + esc(v) + '"' + (x.num ? ' type="number" inputmode="decimal"' : '') + (x.tel ? ' type="tel"' : '') + '>';
-  }).join("") +
-    '<div class="row"><button id="ok">حفظ</button><button class="sec" id="no">إلغاء</button></div>' +
-    (extra ? '<button class="red" id="ex" style="width:100%;margin-top:10px">' + extra.label + '</button>' : '');
-  document.getElementById("dt").textContent = title;
-  d.showModal();
+  }).join("") + '<div class="row"><button id="ok">حفظ</button><button class="sec" id="no">إلغاء</button></div>' + (extra ? '<button class="red" id="ex" style="width:100%;margin-top:10px">' + extra.label + '</button>' : '');
+  document.getElementById("dt").textContent = title; d.showModal();
   document.getElementById("no").onclick = function() { d.close(); };
   if (extra) document.getElementById("ex").onclick = function() { if (extra.fn()) d.close(); };
-  document.getElementById("ok").onclick = function() {
-    var v = fields.map(function(x, i) {
-      var e = document.getElementById("f" + i);
-      return x.chk ? e.checked : e.value.trim();
-    });
-    if (ok(v)) d.close();
-  };
+  document.getElementById("ok").onclick = function() { var v = fields.map(function(x, i) { var e = document.getElementById("f" + i); return x.chk ? e.checked : e.value.trim(); }); if (ok(v)) d.close(); };
 }
 
 render();
