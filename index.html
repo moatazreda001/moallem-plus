@@ -63,27 +63,26 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <script>
 var teacherPhone = localStorage.getItem("teacherPhone") || "";
 var db = { s: [], g: [], pay: {}, att: {} };
-var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل بالسحابة";
+var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل";
 
 function save() {
   try { localStorage.setItem("tutorAppData_" + teacherPhone, JSON.stringify(db)); } catch(e) {}
   syncToCloud();
 }
 
-// محاكاة مزامنة سحابية ذكية وآمنة تعتمد على رقم هاتف المدرس
 function syncToCloud() {
   if (!teacherPhone) return;
-  syncStatus = "جاري الحفظ بالسحابة...";
+  syncStatus = "جاري الحفظ...";
   render();
   setTimeout(function() {
     try {
       localStorage.setItem("cloud_backup_" + teacherPhone, JSON.stringify(db));
-      syncStatus = "✓ تم الحفظ سحابياً";
+      syncStatus = "✓ تم الحفظ";
     } catch(e) {
       syncStatus = "خطأ في المزامنة";
     }
     render();
-  }, 400);
+  }, 300);
 }
 
 function loadCloudData(phone) {
@@ -110,7 +109,7 @@ function fee(s) { if (s.free) return 0; if (s.cf != null && s.cf !== "") return 
 
 function render() {
   if (!teacherPhone) {
-    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك للبدء وحفظ بياناتك سحابياً:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:18px"><button id="loginBtn" style="width:100%">دخول / فتح حسابي</button></div>';
+    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك لتسجيل الدخول وبدء العمل:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:18px"><button id="loginBtn" style="width:100%">دخول</button></div>';
     setTimeout(function() {
       var btn = document.getElementById("loginBtn");
       if (btn) btn.onclick = function() {
@@ -123,7 +122,7 @@ function render() {
   }
 
   if (db.g.length && !grp(gsel)) gsel = db.g[0].id;
-  var h = '<h1>🎓 مدرس بلس <span class="user-badge" id="logoutBtn" title="تغيير الحساب">📱 ' + esc(teacherPhone) + '</span></h1>';
+  var h = '<h1>🎓 مدرس بلس <span class="user-badge" id="logoutBtn" title="تسجيل الخروج">📱 ' + esc(teacherPhone) + '</span></h1>';
   h += '<div class="sync-bar">' + syncStatus + '</div>';
   h += '<div class="tabs"><button data-t="pay" class="' + (tab === "pay" ? "on" : "") + '">المصاريف</button><button data-t="att" class="' + (tab === "att" ? "on" : "") + '">الحضور</button><button data-t="students" class="' + (tab === "students" ? "on" : "") + '">الطلاب</button><button data-t="grp" class="' + (tab === "grp" ? "on" : "") + '">المجموعات</button></div>';
   
@@ -140,7 +139,7 @@ function render() {
   
   var logout = document.getElementById("logoutBtn");
   if (logout) logout.onclick = function() {
-    if (confirm("هل تريد تسجيل الخروج من هذا الحساب؟")) {
+    if (confirm("هل تريد تسجيل الخروج؟")) {
       teacherPhone = "";
       localStorage.removeItem("teacherPhone");
       render();
@@ -238,14 +237,17 @@ function studentsView() {
 
   filtered.forEach(function(s) {
     var g = grp(s.g);
-    var presDates = [], absDates = [];
+    var presCount = 0, absDates = [];
     Object.keys(db.att).sort().forEach(function(dt) {
       var dayRec = db.att[dt] || {};
       var daySt = db.s.find(function(x) { return x.g === s.g; });
       if (daySt) {
         if (studentFilterMonth === 'all' || dt.indexOf(mk(mon)) === 0) {
-          if (dayRec[s.id]) presDates.push(dt);
-          else absDates.push(dt);
+          if (dayRec[s.id]) {
+            presCount++;
+          } else {
+            absDates.push(dt);
+          }
         }
       }
     });
@@ -257,8 +259,8 @@ function studentsView() {
     h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="n" data-es="' + s.id + '" style="cursor:pointer">' + esc(s.n) + ' ✎</div><div class="p">' + esc(g ? g.n : '') + ' · ' + (s.free ? 'معفي' : money(fee(s))) + '</div></div>';
     h += s.free ? '<span class="free">معفي</span>' : '<button class="badge ' + (isPaid ? 'paid' : 'unpaid') + '" data-pid="' + s.id + '">' + (isPaid ? '✓ دفع' : 'لسه') + '</button>';
     h += '</div><div style="font-size:12px;background:var(--bg);padding:8px;border-radius:10px;border:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
-    h += '<span>حضر: <b style="color:var(--grn)">' + presDates.length + '</b> يوم</span> | <span>غاب: <b style="color:var(--red)">' + absDates.length + '</b> يوم</span>';
-    h += '<div style="width:100%;margin-top:4px;color:var(--mut)">تواريخ الحضور: ' + (presDates.length ? presDates.join(', ') : 'لا يوجد') + '</div>';
+    h += '<span>حضر: <b style="color:var(--grn)">' + presCount + '</b> يوم</span> | <span>غاب: <b style="color:var(--red)">' + absDates.length + '</b> يوم</span>';
+    h += '<div style="width:100%;margin-top:4px;color:var(--red)">تواريخ الغياب: ' + (absDates.length ? absDates.join(', ') : 'لا يوجد غياب') + '</div>';
     h += '</div></div>';
   });
 
