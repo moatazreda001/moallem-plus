@@ -47,43 +47,42 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .link{color:var(--pri);font-size:13px;text-decoration:none}
 .hint{color:var(--mut);font-size:13px;margin:-4px 0 10px}
 
-/* تحسين تصميم إدخال الطلاب الرأسي للموبايل */
+/* تحسين تصميم كروت الطلاب وزر الحذف العلوي */
 .student-card-item {
   background: var(--bg);
   border: 1px solid var(--bd);
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 10px;
+  position: relative;
+}
+.student-card-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+.del-card-btn {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1.2;
 }
 .student-card-fields {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.student-row-top {
+.student-row-top, .student-row-bottom {
   display: flex;
   gap: 8px;
 }
-.student-row-top input {
-  margin-bottom: 0;
-}
-.student-row-bottom {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.student-row-bottom input {
+.student-row-top input, .student-row-bottom input {
   margin-bottom: 0;
   flex: 1;
-}
-.del-card-btn {
-  background: transparent;
-  color: var(--red);
-  border: 1px solid var(--bd);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
-  cursor: pointer;
 }
 .addrow{width:100%;margin:7px 0 12px}
 .dlg-actions{display:flex;gap:8px;margin-top:14px}.dlg-actions>*{flex:1}
@@ -98,7 +97,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .grp-pill{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:3px 9px;font-weight:600;color:var(--tx)}
 .grp-body{border-top:1px solid var(--bd);padding:10px;background:var(--bg)}
 .grp-search{margin-bottom:8px;padding:9px 12px;font-size:14px;border-radius:10px}
-.days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
 .day-chk{display:flex;align-items:center;gap:4px;font-size:13px;background:var(--bg);border:1px solid var(--bd);padding:6px 8px;border-radius:8px;cursor:pointer}
 .day-chk input{width:auto;margin:0}
 </style>
@@ -391,21 +390,32 @@ function bind() {
   document.querySelectorAll("[data-dg]").forEach(function(b) { b.onclick = function() { var g = grp(b.dataset.dg); if (confirm("حذف المجموعة " + g.n + " وكل طلابها؟")) { db.s = db.s.filter(function(s) { return s.g !== g.id; }); db.g = db.g.filter(function(x) { return x.id !== g.id; }); delete openGrps[g.id]; save(); render(); } }; });
   if (q("addg")) q("addg").onclick = newGroup;
   if (q("adds")) q("adds").onclick = function() { if (!db.g.length) { tab = "grp"; render(); return; } newStudents(gsel); };
+
+  var selectAllDaysBtn = q("selectAllDays");
+  if (selectAllDaysBtn) {
+    selectAllDaysBtn.onclick = function() {
+      var checkboxes = document.querySelectorAll('.gday, .edday');
+      var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+      checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
+      selectAllDaysBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
+    };
+  }
 }
 
-// دوال إدارة إدخال الطلاب بتصميم الكروت الرأسية النظيفة
 function studentRowsHTML(count) {
   var h = '<div id="studentRowsContainer">';
   for (var i = 0; i < (count || 2); i++) {
     h += '<div class="student-card-item">' +
+         '<div class="student-card-header">' +
+         '<button type="button" class="del-card-btn" title="حذف الطالب">حذف الطالب ✕</button>' +
+         '</div>' +
          '<div class="student-card-fields">' +
          '<div class="student-row-top">' +
-         '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off" style="flex:2">' +
-         '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر" autocomplete="off" style="flex:2">' +
+         '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off">' +
+         '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر (اختياري)" autocomplete="off">' +
          '</div>' +
          '<div class="student-row-bottom">' +
-         '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة)" autocomplete="off">' +
-         '<button type="button" class="del-card-btn" title="حذف الطالب">✕</button>' +
+         '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة) اختيارية" autocomplete="off">' +
          '</div>' +
          '</div>' +
          '</div>';
@@ -419,14 +429,16 @@ function setupStudentRows() {
   function addRow(focus) {
     var div = document.createElement('div');
     div.className = 'student-card-item';
-    div.innerHTML = '<div class="student-card-fields">' +
+    div.innerHTML = '<div class="student-card-header">' +
+                    '<button type="button" class="del-card-btn" title="حذف الطالب">حذف الطالب ✕</button>' +
+                    '</div>' +
+                    '<div class="student-card-fields">' +
                     '<div class="student-row-top">' +
-                    '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off" style="flex:2">' +
-                    '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر" autocomplete="off" style="flex:2">' +
+                    '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off">' +
+                    '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر (اختياري)" autocomplete="off">' +
                     '</div>' +
                     '<div class="student-row-bottom">' +
-                    '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة)" autocomplete="off">' +
-                    '<button type="button" class="del-card-btn" title="حذف الطالب">✕</button>' +
+                    '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة) اختيارية" autocomplete="off">' +
                     '</div>' +
                     '</div>';
     container.appendChild(div);
@@ -461,7 +473,10 @@ function openStudentEntry(title, gid, isNewGroup) {
   if (isNewGroup) {
     html += '<input id="newGroupName" placeholder="اسم المجموعة">' +
             '<input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">' +
-            '<label style="font-size:13px;color:var(--mut);display:block;margin-bottom:6px">أيام الحضور أسبوعياً:</label>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+            '<label style="font-size:13px;color:var(--mut)">أيام الحضور أسبوعياً:</label>' +
+            '<button type="button" class="sec sm" id="selectAllDays" style="padding:4px 8px;font-size:11px">تحديد كل الأيام</button>' +
+            '</div>' +
             '<div class="days-grid">' +
             '<label class="day-chk"><input type="checkbox" class="gday" value="0" checked> أحد</label>' +
             '<label class="day-chk"><input type="checkbox" class="gday" value="1" checked> إثنين</label>' +
@@ -472,8 +487,20 @@ function openStudentEntry(title, gid, isNewGroup) {
             '<label class="day-chk"><input type="checkbox" class="gday" value="6" checked> سبت</label>' +
             '</div>';
   }
-  html += '<div class="hint">اكتب كل طالب في بطاقة منفصلة. خانة المصاريف الإضافية (للملازم/المذكرات) اختيارية.</div>' + studentRowsHTML(2) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
+  html += '<div class="hint">اكتب كل طالب في بطاقة منفصلة. خانة المصاريف الإضافية اختيارية.</div>' + studentRowsHTML(2) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
   f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
+  
+  // تفعيل حدث زر تحديد الكل للأيام
+  var selectAllBtn = document.getElementById('selectAllDays');
+  if (selectAllBtn) {
+    selectAllBtn.onclick = function() {
+      var checkboxes = document.querySelectorAll('.gday, .edday');
+      var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+      checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
+      selectAllBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
+    };
+  }
+
   document.getElementById('studentCancel').onclick = function() { d.close(); };
   document.getElementById('studentSave').onclick = function() {
     var rows = collectStudentRows();
@@ -500,7 +527,7 @@ function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ 
 function editGroup(id) {
   var g = grp(id);
   var dayNames = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
-  var daysHtml = '<label style="font-size:13px;color:var(--mut);display:block;margin-bottom:6px">أيام الحضور أسبوعياً:</label><div class="days-grid">';
+  var daysHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><label style="font-size:13px;color:var(--mut)">أيام الحضور أسبوعياً:</label><button type="button" class="sec sm" id="selectAllDays" style="padding:4px 8px;font-size:11px">تحديد كل الأيام</button></div><div class="days-grid">';
   for(var i=0; i<7; i++){
     var isChecked = !g.days || g.days.includes(i) ? ' checked' : '';
     daysHtml += '<label class="day-chk"><input type="checkbox" class="edday" value="'+i+'"'+isChecked+'> '+dayNames[i]+'</label>';
@@ -514,6 +541,16 @@ function editGroup(id) {
     g.days = editedDays.length ? editedDays : [0,1,2,3,4,5,6];
     save(); render(); return true;
   }, null, daysHtml);
+
+  var selectAllBtn = document.getElementById('selectAllDays');
+  if (selectAllBtn) {
+    selectAllBtn.onclick = function() {
+      var checkboxes = document.querySelectorAll('.gday, .edday');
+      var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+      checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
+      selectAllBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
+    };
+  }
 }
 
 function editStudent(id) {
@@ -521,8 +558,8 @@ function editStudent(id) {
   ask("تعديل الطالب", [
     { p: "اسم الطالب", v: s.n }, 
     { p: "مصاريف خاصة (اكتبها لو مختلفة عن المجموعة)", num: 1, v: s.cf }, 
-    { p: "مصاريف إضافية (ملازم/مذكرات)", num: 1, v: s.ex }, 
-    { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, 
+    { p: "مصاريف إضافية (ملزمة/مذكرة)", num: 1, v: s.ex }, 
+    { p: "رقم ولي الأمر (اختياري)", tel: 1, v: s.ph }, 
     { chk: "معفي من المصاريف", v: s.free }
   ], function(v) { 
     if (!v[0]) return false; 
