@@ -55,6 +55,12 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .grp-body{border-top:1px solid var(--bd);padding:10px;background:var(--bg)}
 .grp-search{margin-bottom:8px;padding:9px 12px;font-size:14px;border-radius:10px}
 .sync-bar{font-size:11px;color:var(--grn);text-align:center;margin-bottom:8px}
+.pass-wrapper{position:relative;display:flex;align-items:center}
+.pass-wrapper input{margin-bottom:0}
+.pass-toggle{position:absolute;inset-inline-end:12px;background:none;border:none;color:var(--mut);cursor:pointer;padding:4px;font-size:14px}
+.days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.day-chk{display:flex;align-items:center;gap:4px;font-size:13px;background:var(--bg);border:1px solid var(--bd);padding:6px 8px;border-radius:8px;cursor:pointer}
+.day-chk input{width:auto;margin:0}
 </style>
 </head>
 <body>
@@ -63,15 +69,12 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 <script>
 var teacherPhone = localStorage.getItem("teacherPhone") || "";
 var db = { s: [], g: [], pay: {}, att: {} };
-var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل";
+var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل", showAllGroupsToday = false;
 
-// تحميل البيانات الفوري عند فتح التطبيق
 if (teacherPhone) {
   var saved = localStorage.getItem("cloud_backup_" + teacherPhone);
-  if (saved) {
-    try { db = JSON.parse(saved); } catch(e) {}
-  }
-  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0 } : g; });
+  if (saved) { try { db = JSON.parse(saved); } catch(e) {} }
+  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
 }
 
 function save() {
@@ -80,43 +83,21 @@ function save() {
     localStorage.setItem("tutorAppData_" + teacherPhone, JSON.stringify(db));
     localStorage.setItem("cloud_backup_" + teacherPhone, JSON.stringify(db));
     syncStatus = "✓ تم الحفظ";
-  } catch(e) {
-    syncStatus = "خطأ في الحفظ";
-  }
+  } catch(e) { syncStatus = "خطأ في الحفظ"; }
   render();
 }
 
 function loginUser(phone, password) {
-  phone = phone.trim();
-  password = password.trim();
+  phone = phone.trim(); password = password.trim();
   if (phone.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
   if (password.length < 4) { alert("كلمة المرور يجب ألا تقل عن 4 أرقام أو حروف"); return; }
-
-  var passKey = "teacher_pass_" + phone;
-  var savedPass = localStorage.getItem(passKey);
-
-  if (savedPass) {
-    // حساب موجود مسبقاً، نتحقق من كلمة المرور
-    if (savedPass !== password) {
-      alert("كلمة المرور غير صحيحة لهذا الرقم!");
-      return;
-    }
-  } else {
-    // حساب جديد، نقوم بتسجيل كلمة المرور وحفظها
-    localStorage.setItem(passKey, password);
-  }
-
-  teacherPhone = phone;
-  localStorage.setItem("teacherPhone", phone);
-  
-  // استرجاع البيانات إن وجدت
+  var passKey = "teacher_pass_" + phone, savedPass = localStorage.getItem(passKey);
+  if (savedPass) { if (savedPass !== password) { alert("كلمة المرور غير صحيحة لهذا الرقم!"); return; } }
+  else { localStorage.setItem(passKey, password); }
+  teacherPhone = phone; localStorage.setItem("teacherPhone", phone);
   var savedData = localStorage.getItem("cloud_backup_" + phone);
-  if (savedData) {
-    try { db = JSON.parse(savedData); } catch(e) {}
-  } else {
-    db = { s: [], g: [], pay: {}, att: {} };
-  }
-  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0 } : g; });
+  if (savedData) { try { db = JSON.parse(savedData); } catch(e) {} } else { db = { s: [], g: [], pay: {}, att: {} }; }
+  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
   render();
 }
 
@@ -131,14 +112,14 @@ function fee(s) { if (s.free) return 0; if (s.cf != null && s.cf !== "") return 
 
 function render() {
   if (!teacherPhone) {
-    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك وكلمة مرور محمية للدخول:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:16px"><input id="loginPass" type="password" placeholder="كلمة المرور الخاصة بك" style="text-align:center;font-size:16px"><button id="loginBtn" style="width:100%">دخول / تسجيل حساب</button></div>';
+    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك وكلمة المرور للدخول:</p>' +
+      '<input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:16px">' +
+      '<div class="pass-wrapper" style="margin-bottom:10px"><input id="loginPass" type="password" placeholder="كلمة المرور" style="text-align:center;font-size:16px;margin-bottom:0"><button type="button" class="pass-toggle" id="togglePass">👁️</button></div>' +
+      '<button id="loginBtn" style="width:100%">دخول / تسجيل حساب</button></div>';
     setTimeout(function() {
-      var btn = document.getElementById("loginBtn");
-      if (btn) btn.onclick = function() {
-        var p = document.getElementById("loginPhone").value;
-        var pw = document.getElementById("loginPass").value;
-        loginUser(p, pw);
-      };
+      var btn = document.getElementById("loginBtn"), tgl = document.getElementById("togglePass"), passInp = document.getElementById("loginPass");
+      if (tgl && passInp) tgl.onclick = function() { passInp.type = passInp.type === "password" ? "text" : "password"; tgl.textContent = passInp.type === "password" ? "👁️" : "👁️‍🗨️"; };
+      if (btn) btn.onclick = function() { loginUser(document.getElementById("loginPhone").value, passInp.value); };
     }, 100);
     return;
   }
@@ -160,14 +141,7 @@ function render() {
   });
   
   var logout = document.getElementById("logoutBtn");
-  if (logout) logout.onclick = function() {
-    if (confirm("هل تريد تسجيل الخروج؟")) {
-      teacherPhone = "";
-      localStorage.removeItem("teacherPhone");
-      render();
-    }
-  };
-  
+  if (logout) logout.onclick = function() { if (confirm("هل تريد تسجيل الخروج؟")) { teacherPhone = ""; localStorage.removeItem("teacherPhone"); render(); } };
   bind();
 }
 
@@ -195,11 +169,14 @@ function wa(s) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") =
 
 function attView() {
   var d = dk(dayD), rec = db.att[d] || {};
+  var currentDayOfWeek = dayD.getDay(); // 0: الأحد, 1: الإثنين, وهكذا
   var h = '<div class="month"><button class="sec" id="pd">→</button><b>' + dlabel(dayD) + '</b><button class="sec" id="nd">←</button></div>';
   if (!db.g.length) return h + '<div class="empty">ضيف مجموعة الأول</div>';
+  
   var totPres = db.s.filter(function(s) { return !!rec[s.id]; }).length;
   h += '<div class="stats"><div class="stat"><small>إجمالي الحضور اليوم</small><b>' + totPres + ' / ' + db.s.length + '</b></div></div>';
   h += '<input id="attSearch" type="search" placeholder="ابحث باسم الطالب في كل المجموعات..." value="' + esc(attQuery) + '" style="margin-bottom:10px">';
+  
   var globalQ = attQuery.trim().toLowerCase();
   if (globalQ) {
     var matched = db.s.filter(function(s) { return s.n.toLowerCase().indexOf(globalQ) !== -1; });
@@ -210,7 +187,22 @@ function attView() {
     if (!matched.length) h += '<div class="empty">ملقيناش طالب بالاسم ده</div>';
     return h + fab();
   }
-  db.g.forEach(function(g) {
+
+  // فلترة المجموعات حسب جدول الأيام لهذا اليوم
+  var targetGroups = db.g.filter(function(g) {
+    if (showAllGroupsToday) return true;
+    if (!g.days || !g.days.length) return true; // لو مش محدد تظهر عادي
+    return g.days.includes(currentDayOfWeek);
+  });
+
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:13px;color:var(--mut)">مجموعات اليوم (' + targetGroups.length + ')</span><button class="sec sm" id="toggleAllGroups">' + (showAllGroupsToday ? 'عرض مجموعات اليوم فقط' : 'عرض كل المجموعات') + '</button></div>';
+
+  if (!targetGroups.length) {
+    h += '<div class="empty">مفيش مجموعات جدولها اليوم. يمكنك الضغط على "عرض كل المجموعات".</div>';
+    return h + fab();
+  }
+
+  targetGroups.forEach(function(g) {
     var gStudents = db.s.filter(function(s) { return s.g === g.id; });
     var gPres = gStudents.filter(function(s) { return !!rec[s.id]; }).length;
     var isOpen = !!openGrps[g.id];
@@ -265,11 +257,7 @@ function studentsView() {
       var daySt = db.s.find(function(x) { return x.g === s.g; });
       if (daySt) {
         if (studentFilterMonth === 'all' || dt.indexOf(mk(mon)) === 0) {
-          if (dayRec[s.id]) {
-            presCount++;
-          } else {
-            absDates.push(dt);
-          }
+          if (dayRec[s.id]) { presCount++; } else { absDates.push(dt); }
         }
       }
     });
@@ -294,7 +282,9 @@ function grpView() {
   if (!db.g.length) h += '<div class="empty">لسه مفيش مجموعات. مثال: تانية ثانوي - رياضيات</div>';
   db.g.forEach(function(g) {
     var n = db.s.filter(function(s) { return s.g === g.id; }).length;
-    h += '<div class="item"><div><div class="n">' + esc(g.n) + '</div><div class="p">' + n + ' طالب · ' + money(g.fee || 0) + ' شهرياً</div></div><div class="acts"><button class="sm" data-ag="' + esc(g.id) + '">+ طلاب</button><button class="sm sec" data-eg="' + esc(g.id) + '">تعديل</button><button class="sm red" data-dg="' + esc(g.id) + '">حذف</button></div></div>';
+    var dayNames = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+    var gDaysStr = (g.days && g.days.length < 7) ? g.days.map(function(d){return dayNames[d];}).join(", ") : "كل الأيام";
+    h += '<div class="item"><div><div class="n">' + esc(g.n) + '</div><div class="p">' + n + ' طالب · ' + money(g.fee || 0) + ' شهرياً<br><small style="color:var(--pri)">الأيام: ' + gDaysStr + '</small></div></div><div class="acts"><button class="sm" data-ag="' + esc(g.id) + '">+ طلاب</button><button class="sm sec" data-eg="' + esc(g.id) + '">تعديل</button><button class="sm red" data-dg="' + esc(g.id) + '">حذف</button></div></div>';
   });
   return h + '<button class="fab" id="addg">+ مجموعة جديدة</button>';
 }
@@ -305,6 +295,7 @@ function bind() {
   var q = function(i) { return document.getElementById(i); };
   if (q("gs")) q("gs").onchange = function() { gsel = this.value; render(); };
   if (q("attSearch")) q("attSearch").oninput = function() { var pos = this.selectionStart; attQuery = this.value; render(); var el = q("attSearch"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
+  if (q("toggleAllGroups")) q("toggleAllGroups").onclick = function() { showAllGroupsToday = !showAllGroupsToday; render(); };
   
   if (q("studentSearchInput")) q("studentSearchInput").oninput = function() { var pos = this.selectionStart; studentQuery = this.value; render(); var el = q("studentSearchInput"); if (el) { el.focus(); el.setSelectionRange(pos, pos); } };
   if (q("studentGroupFilter")) q("studentGroupFilter").onchange = function() { studentFilterGrp = this.value; render(); };
@@ -353,30 +344,74 @@ function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ 
 function openStudentEntry(title, gid, isNewGroup) {
   var f = document.getElementById('df'), d = document.getElementById('dlg');
   var html = '';
-  if (isNewGroup) html += '<input id="newGroupName" placeholder="اسم المجموعة"><input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">';
+  if (isNewGroup) {
+    html += '<input id="newGroupName" placeholder="اسم المجموعة">' +
+            '<input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">' +
+            '<label style="font-size:13px;color:var(--mut);display:block;margin-bottom:6px">أيام الحضور أسبوعياً:</label>' +
+            '<div class="days-grid">' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="0" checked> أحد</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="1" checked> إثنين</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="2" checked> ثلاثاء</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="3" checked> أربعاء</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="4" checked> خميس</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="5" checked> جمعة</label>' +
+            '<label class="day-chk"><input type="checkbox" class="gday" value="6" checked> سبت</label>' +
+            '</div>';
+  }
   html += '<div class="hint">اكتب كل طالب في صف مستقل. رقم ولي الأمر اختياري، وتقدر تضيف صفوف جديدة وقت ما تحتاج.</div>' + studentRowsHTML(3) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
   f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
   document.getElementById('studentCancel').onclick = function() { d.close(); };
   document.getElementById('studentSave').onclick = function() {
     var rows = collectStudentRows();
-    if (isNewGroup) { var name = document.getElementById('newGroupName').value.trim(); if (!name) { alert('اكتب اسم المجموعة الأول'); return; } var id = 'g' + Date.now(); db.g.push({ id: id, n: name, fee: parseFloat(document.getElementById('newGroupFee').value) || 0 }); saveStudentRows(id, rows); gsel = id; }
-    else { if (!rows.length) { alert('اكتب اسم طالب واحد على الأقل'); return; } saveStudentRows(gid, rows); gsel = gid; }
+    if (isNewGroup) {
+      var name = document.getElementById('newGroupName').value.trim();
+      if (!name) { alert('اكتب اسم المجموعة الأول'); return; }
+      var selectedDays = Array.from(document.querySelectorAll('.gday:checked')).map(function(el){ return parseInt(el.value); });
+      var id = 'g' + Date.now();
+      db.g.push({ id: id, n: name, fee: parseFloat(document.getElementById('newGroupFee').value) || 0, days: selectedDays.length ? selectedDays : [0,1,2,3,4,5,6] });
+      saveStudentRows(id, rows); gsel = id;
+    } else {
+      if (!rows.length) { alert('اكتب اسم طالب واحد على الأقل'); return; }
+      saveStudentRows(gid, rows); gsel = gid;
+    }
     save(); d.close(); render();
   };
 }
 
 function newGroup() { openStudentEntry('مجموعة جديدة', null, true); }
 function newStudents(gid) { openStudentEntry('إضافة طلاب إلى ' + grp(gid).n, gid, false); }
-function editGroup(id) { var g = grp(id); ask("تعديل المجموعة", [{ p: "اسم المجموعة", v: g.n }, { p: "مصاريف الطالب في الشهر", num: 1, v: g.fee }], function(v) { if (!v[0]) return false; g.n = v[0]; g.fee = parseFloat(v[1]) || 0; save(); render(); return true; }); }
-function editStudent(id) { var s = db.s.find(function(x) { return x.id === id; }), g = grp(s.g); ask("تعديل الطالب", [{ p: "اسم الطالب", v: s.n }, { p: "مصاريف خاصة (سيبها فاضية لو نفس مصاريف المجموعة: " + money(g.fee || 0) + ")", num: 1, v: s.cf }, { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, { chk: "معفي من المصاريف", v: s.free }], function(v) { if (!v[0]) return false; s.n = v[0]; s.cf = v[1] === "" ? null : parseFloat(v[1]); s.ph = v[2]; s.free = !!v[3]; save(); render(); return true; }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } }); }
 
-function ask(title, fields, ok, extra) {
+function editGroup(id) {
+  var g = grp(id);
+  var dayNames = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+  var daysHtml = '<label style="font-size:13px;color:var(--mut);display:block;margin-bottom:6px">أيام الحضور أسبوعياً:</label><div class="days-grid">';
+  for(var i=0; i<7; i++){
+    var isChecked = !g.days || g.days.includes(i) ? ' checked' : '';
+    daysHtml += '<label class="day-chk"><input type="checkbox" class="edday" value="'+i+'"'+isChecked+'> '+dayNames[i]+'</label>';
+  }
+  daysHtml += '</div>';
+
+  ask("تعديل المجموعة", [{ p: "اسم المجموعة", v: g.n }, { p: "مصاريف الطالب في الشهر", num: 1, v: g.fee }], function(v) {
+    if (!v[0]) return false;
+    g.n = v[0]; g.fee = parseFloat(v[1]) || 0;
+    var editedDays = Array.from(document.querySelectorAll('.edday:checked')).map(function(el){ return parseInt(el.value); });
+    g.days = editedDays.length ? editedDays : [0,1,2,3,4,5,6];
+    save(); render(); return true;
+  }, null, daysHtml);
+}
+
+function editStudent(id) {
+  var s = db.s.find(function(x) { return x.id === id; }), g = grp(s.g);
+  ask("تعديل الطالب", [{ p: "اسم الطالب", v: s.n }, { p: "مصاريف خاصة (سيبها فاضية لو نفس مصاريف المجموعة: " + money(g.fee || 0) + ")", num: 1, v: s.cf }, { p: "موبايل ولي الأمر (اختياري)", tel: 1, v: s.ph }, { chk: "معفي من المصاريف", v: s.free }], function(v) { if (!v[0]) return false; s.n = v[0]; s.cf = v[1] === "" ? null : parseFloat(v[1]); s.ph = v[2]; s.free = !!v[3]; save(); render(); return true; }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } });
+}
+
+function ask(title, fields, ok, extra, customHtml) {
   var f = document.getElementById("df"), d = document.getElementById("dlg");
-  f.innerHTML = fields.map(function(x, i) {
+  f.innerHTML = (customHtml || '') + fields.map(function(x, i) {
     var v = x.v == null ? "" : x.v;
     if (x.chk) return '<label class="chk"><input type="checkbox" id="f' + i + '"' + (v ? ' checked' : '') + '> ' + x.chk + '</label>';
     return '<input id="f' + i + '" placeholder="' + esc(x.p) + '" value="' + esc(v) + '"' + (x.num ? ' type="number" inputmode="decimal"' : '') + (x.tel ? ' type="tel"' : '') + '>';
-  }).join("") + '<div class="row"><button id="ok">حفظ</button><button class="sec" id="no">إلغاء</button></div>' + (extra ? '<button class="red" id="ex" style="width:100%;margin-top:10px">' + extra.label + '</button>' : '');
+  }).join("") + '<div class="row" style="margin-top:10px"><button id="ok">حفظ</button><button class="sec" id="no">إلغاء</button></div>' + (extra ? '<button class="red" id="ex" style="width:100%;margin-top:10px">' + extra.label + '</button>' : '');
   document.getElementById("dt").textContent = title; d.showModal();
   document.getElementById("no").onclick = function() { d.close(); };
   if (extra) document.getElementById("ex").onclick = function() { if (extra.fn()) d.close(); };
