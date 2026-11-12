@@ -86,7 +86,7 @@ var saved = localStorage.getItem("tutorAppData_standalone");
 if (saved) { try { db = JSON.parse(saved); } catch(e) {} }
 db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
 
-// var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "محلي وآمن تماماً", showAllGroupsToday = false;
+var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "محلي وآمن تماماً", showAllGroupsToday = false;
 
 function save() {
   try {
