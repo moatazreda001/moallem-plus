@@ -23,9 +23,9 @@ button.red{background:transparent;color:var(--red);border:1px solid var(--red)}
 button.sm{padding:7px 11px;font-size:13px}
 input,select,textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);font:inherit;margin-bottom:10px}
 .chk{display:flex;align-items:center;gap:8px;margin-bottom:10px}.chk input{width:auto;margin:0}
-.stats{display:flex;gap:8px;margin-bottom:12px}
-.stat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
-.stat small{color:var(--mut)}.stat b{display:block;font-size:22px}
+.stats{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.stat{flex:1;min-width:45%;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
+.stat small{color:var(--mut)}.stat b{display:block;font-size:18px}
 .item{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .item .n{font-weight:600}.item .p{color:var(--mut);font-size:13px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
@@ -151,9 +151,18 @@ function payView() {
   var m = mk(mon), paid = db.pay[m] || {};
   var pay = db.s.filter(function(s) { return !s.free; });
   var np = pay.filter(function(s) { return paid[s.id]; }).length;
+  
+  // حساب إجمالي الفلوس المحصلة والمتبقية
+  var totalCollected = pay.filter(function(s) { return paid[s.id]; }).reduce(function(a, s) { return a + fee(s); }, 0);
   var left = pay.filter(function(s) { return !paid[s.id]; }).reduce(function(a, s) { return a + fee(s); }, 0);
+
   var h = '<div class="month"><button class="sec" id="pm">→</button><b>' + mlabel(mon) + '</b><button class="sec" id="nm">←</button></div>';
-  h += '<div class="stats"><div class="stat"><small>دفعوا</small><b>' + np + ' / ' + pay.length + '</b></div><div class="stat"><small>المتبقي تحصيله</small><b>' + money(left) + '</b></div></div>';
+  h += '<div class="stats">' +
+       '<div class="stat"><small>دفعوا</small><b>' + np + ' / ' + pay.length + '</b></div>' +
+       '<div class="stat"><small>إجمالي المحصل</small><b style="color:var(--grn)">' + money(totalCollected) + '</b></div>' +
+       '<div class="stat" style="flex-basis:100%"><small>المتبقي تحصيله</small><b style="color:var(--red)">' + money(left) + '</b></div>' +
+       '</div>';
+
   if (!db.g.length) return h + '<div class="empty">ابدأ بإضافة مجموعة من تبويب المجموعات</div>';
   h += groupSel();
   var shown = db.s.filter(function(s) { return s.g === gsel; });
@@ -169,7 +178,7 @@ function wa(s) { var ph = String(s.ph).replace(/\D/g, ""); if (ph.indexOf("0") =
 
 function attView() {
   var d = dk(dayD), rec = db.att[d] || {};
-  var currentDayOfWeek = dayD.getDay(); // 0: الأحد, 1: الإثنين, وهكذا
+  var currentDayOfWeek = dayD.getDay(); 
   var h = '<div class="month"><button class="sec" id="pd">→</button><b>' + dlabel(dayD) + '</b><button class="sec" id="nd">←</button></div>';
   if (!db.g.length) return h + '<div class="empty">ضيف مجموعة الأول</div>';
   
@@ -188,10 +197,9 @@ function attView() {
     return h + fab();
   }
 
-  // فلترة المجموعات حسب جدول الأيام لهذا اليوم
   var targetGroups = db.g.filter(function(g) {
     if (showAllGroupsToday) return true;
-    if (!g.days || !g.days.length) return true; // لو مش محدد تظهر عادي
+    if (!g.days || !g.days.length) return true;
     return g.days.includes(currentDayOfWeek);
   });
 
