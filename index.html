@@ -47,7 +47,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .link{color:var(--pri);font-size:13px;text-decoration:none}
 .hint{color:var(--mut);font-size:13px;margin:-4px 0 10px}
 
-/* تحسين تصميم كروت الطلاب وزر الحذف العلوي */
+/* تحسين تصميم الكروت وأزرار التحكم */
 .student-card-item {
   background: var(--bg);
   border: 1px solid var(--bd);
@@ -391,15 +391,27 @@ function bind() {
   if (q("addg")) q("addg").onclick = newGroup;
   if (q("adds")) q("adds").onclick = function() { if (!db.g.length) { tab = "grp"; render(); return; } newStudents(gsel); };
 
-  var selectAllDaysBtn = q("selectAllDays");
-  if (selectAllDaysBtn) {
-    selectAllDaysBtn.onclick = function() {
-      var checkboxes = document.querySelectorAll('.gday, .edday');
-      var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
-      checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
-      selectAllDaysBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
-    };
-  }
+  setupDaysToggleListener();
+}
+
+function updateDaysButtonText() {
+  var selectAllBtn = document.getElementById('selectAllDays');
+  if (!selectAllBtn) return;
+  var checkboxes = document.querySelectorAll('.gday, .edday');
+  if (!checkboxes.length) return;
+  var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+  selectAllBtn.textContent = allChecked ? 'إلغاء التحديد' : 'تحديد كل الأيام';
+}
+
+function setupDaysToggleListener() {
+  var container = document.getElementById('dlg');
+  if (!container) return;
+  container.addEventListener('change', function(e) {
+    if (e.target.classList.contains('gday') || e.target.classList.contains('edday')) {
+      updateDaysButtonText();
+    }
+  });
+  updateDaysButtonText();
 }
 
 function studentRowsHTML(count) {
@@ -472,7 +484,7 @@ function openStudentEntry(title, gid, isNewGroup) {
   var html = '';
   if (isNewGroup) {
     html += '<input id="newGroupName" placeholder="اسم المجموعة">' +
-            '<input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب في الشهر">' +
+            '<input id="newGroupFee" type="number" inputmode="decimal" placeholder="مصاريف الطالب الشهرية">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
             '<label style="font-size:13px;color:var(--mut)">أيام الحضور أسبوعياً:</label>' +
             '<button type="button" class="sec sm" id="selectAllDays" style="padding:4px 8px;font-size:11px">تحديد كل الأيام</button>' +
@@ -487,40 +499,40 @@ function openStudentEntry(title, gid, isNewGroup) {
             '<label class="day-chk"><input type="checkbox" class="gday" value="6" checked> سبت</label>' +
             '</div>';
   }
-  html += '<div class="hint">اكتب كل طالب في بطاقة منفصلة. خانة المصاريف الإضافية اختيارية.</div>' + studentRowsHTML(2) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
+  html += studentRowsHTML(2) + '<div class="dlg-actions"><button id="studentSave">حفظ البيانات</button><button class="sec" id="studentCancel">إلغاء</button></div>';
   f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
   
-  // تفعيل حدث زر تحديد الكل للأيام
   var selectAllBtn = document.getElementById('selectAllDays');
   if (selectAllBtn) {
     selectAllBtn.onclick = function() {
       var checkboxes = document.querySelectorAll('.gday, .edday');
       var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
       checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
-      selectAllBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
+      updateDaysButtonText();
     };
   }
+  updateDaysButtonText();
 
   document.getElementById('studentCancel').onclick = function() { d.close(); };
   document.getElementById('studentSave').onclick = function() {
     var rows = collectStudentRows();
     if (isNewGroup) {
       var name = document.getElementById('newGroupName').value.trim();
-      if (!name) { alert('اكتب اسم المجموعة الأول'); return; }
+      if (!name) { alert('يرجى إدخال اسم المجموعة'); return; }
       var selectedDays = Array.from(document.querySelectorAll('.gday:checked')).map(function(el){ return parseInt(el.value); });
       var id = 'g' + Date.now();
       db.g.push({ id: id, n: name, fee: parseFloat(document.getElementById('newGroupFee').value) || 0, days: selectedDays.length ? selectedDays : [0,1,2,3,4,5,6] });
       saveStudentRows(id, rows); gsel = id;
     } else {
-      if (!rows.length) { alert('اكتب اسم طالب واحد على الأقل'); return; }
+      if (!rows.length) { alert('يرجى إدخال بيانات طالب واحد على الأقل'); return; }
       saveStudentRows(gid, rows); gsel = gid;
     }
     save(); d.close(); render();
   };
 }
 
-function newGroup() { openStudentEntry('مجموعة جديدة', null, true); }
-function newStudents(gid) { openStudentEntry('إضافة طلاب إلى ' + grp(gid).n, gid, false); }
+function newGroup() { openStudentEntry('إضافة مجموعة جديدة', null, true); }
+function newStudents(gid) { openStudentEntry('إضافة طلاب للمجموعة', gid, false); }
 
 function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph, ex: x.ex }); }); }
 
@@ -534,7 +546,7 @@ function editGroup(id) {
   }
   daysHtml += '</div>';
 
-  ask("تعديل المجموعة", [{ p: "اسم المجموعة", v: g.n }, { p: "مصاريف الطالب في الشهر", num: 1, v: g.fee }], function(v) {
+  ask("تعديل بيانات المجموعة", [{ p: "اسم المجموعة", v: g.n }, { p: "مصاريف الطالب الشهرية", num: 1, v: g.fee }], function(v) {
     if (!v[0]) return false;
     g.n = v[0]; g.fee = parseFloat(v[1]) || 0;
     var editedDays = Array.from(document.querySelectorAll('.edday:checked')).map(function(el){ return parseInt(el.value); });
@@ -548,16 +560,17 @@ function editGroup(id) {
       var checkboxes = document.querySelectorAll('.gday, .edday');
       var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
       checkboxes.forEach(function(cb) { cb.checked = !allChecked; });
-      selectAllBtn.textContent = allChecked ? 'تحديد كل الأيام' : 'إلغاء تحديد الكل';
+      updateDaysButtonText();
     };
   }
+  updateDaysButtonText();
 }
 
 function editStudent(id) {
   var s = db.s.find(function(x) { return x.id === id; }), g = grp(s.g);
-  ask("تعديل الطالب", [
+  ask("تعديل بيانات الطالب", [
     { p: "اسم الطالب", v: s.n }, 
-    { p: "مصاريف خاصة (اكتبها لو مختلفة عن المجموعة)", num: 1, v: s.cf }, 
+    { p: "مصاريف مخصصة (إن وجدت)", num: 1, v: s.cf }, 
     { p: "مصاريف إضافية (ملزمة/مذكرة)", num: 1, v: s.ex }, 
     { p: "رقم ولي الأمر (اختياري)", tel: 1, v: s.ph }, 
     { chk: "معفي من المصاريف", v: s.free }
@@ -569,7 +582,7 @@ function editStudent(id) {
     s.ph = v[3]; 
     s.free = !!v[4]; 
     save(); render(); return true; 
-  }, { label: "حذف الطالب", fn: function() { if (confirm("حذف " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } });
+  }, { label: "حذف الطالب", fn: function() { if (confirm("هل تريد حذف الطالب " + s.n + "؟")) { db.s = db.s.filter(function(x) { return x.id !== id; }); save(); render(); return true; } return false; } });
 }
 
 function ask(title, fields, ok, extra, customHtml) {
