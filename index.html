@@ -65,32 +65,54 @@ var teacherPhone = localStorage.getItem("teacherPhone") || "";
 var db = { s: [], g: [], pay: {}, att: {} };
 var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "متصل";
 
-function save() {
-  try { localStorage.setItem("tutorAppData_" + teacherPhone, JSON.stringify(db)); } catch(e) {}
-  syncToCloud();
-}
-
-function syncToCloud() {
-  if (!teacherPhone) return;
-  syncStatus = "جاري الحفظ...";
-  render();
-  setTimeout(function() {
-    try {
-      localStorage.setItem("cloud_backup_" + teacherPhone, JSON.stringify(db));
-      syncStatus = "✓ تم الحفظ";
-    } catch(e) {
-      syncStatus = "خطأ في المزامنة";
-    }
-    render();
-  }, 300);
-}
-
-function loadCloudData(phone) {
-  teacherPhone = phone;
-  localStorage.setItem("teacherPhone", phone);
-  var saved = localStorage.getItem("cloud_backup_" + phone);
+// تحميل البيانات الفوري عند فتح التطبيق
+if (teacherPhone) {
+  var saved = localStorage.getItem("cloud_backup_" + teacherPhone);
   if (saved) {
     try { db = JSON.parse(saved); } catch(e) {}
+  }
+  db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0 } : g; });
+}
+
+function save() {
+  if (!teacherPhone) return;
+  try {
+    localStorage.setItem("tutorAppData_" + teacherPhone, JSON.stringify(db));
+    localStorage.setItem("cloud_backup_" + teacherPhone, JSON.stringify(db));
+    syncStatus = "✓ تم الحفظ";
+  } catch(e) {
+    syncStatus = "خطأ في الحفظ";
+  }
+  render();
+}
+
+function loginUser(phone, password) {
+  phone = phone.trim();
+  password = password.trim();
+  if (phone.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
+  if (password.length < 4) { alert("كلمة المرور يجب ألا تقل عن 4 أرقام أو حروف"); return; }
+
+  var passKey = "teacher_pass_" + phone;
+  var savedPass = localStorage.getItem(passKey);
+
+  if (savedPass) {
+    // حساب موجود مسبقاً، نتحقق من كلمة المرور
+    if (savedPass !== password) {
+      alert("كلمة المرور غير صحيحة لهذا الرقم!");
+      return;
+    }
+  } else {
+    // حساب جديد، نقوم بتسجيل كلمة المرور وحفظها
+    localStorage.setItem(passKey, password);
+  }
+
+  teacherPhone = phone;
+  localStorage.setItem("teacherPhone", phone);
+  
+  // استرجاع البيانات إن وجدت
+  var savedData = localStorage.getItem("cloud_backup_" + phone);
+  if (savedData) {
+    try { db = JSON.parse(savedData); } catch(e) {}
   } else {
     db = { s: [], g: [], pay: {}, att: {} };
   }
@@ -109,13 +131,13 @@ function fee(s) { if (s.free) return 0; if (s.cf != null && s.cf !== "") return 
 
 function render() {
   if (!teacherPhone) {
-    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك لتسجيل الدخول وبدء العمل:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:18px"><button id="loginBtn" style="width:100%">دخول</button></div>';
+    document.getElementById("app").innerHTML = '<div style="text-align:center;padding:40px 10px"><h1>🎓 مدرس بلس</h1><p class="hint">أهلاً بك يا استاذنا. أدخل رقم موبايلك وكلمة مرور محمية للدخول:</p><input id="loginPhone" type="tel" placeholder="رقم الموبايل (مثال: 010xxxxxxxx)" style="text-align:center;font-size:16px"><input id="loginPass" type="password" placeholder="كلمة المرور الخاصة بك" style="text-align:center;font-size:16px"><button id="loginBtn" style="width:100%">دخول / تسجيل حساب</button></div>';
     setTimeout(function() {
       var btn = document.getElementById("loginBtn");
       if (btn) btn.onclick = function() {
-        var p = document.getElementById("loginPhone").value.trim();
-        if (p.length < 10) { alert("أدخل رقم موبايل صحيح من فضلك"); return; }
-        loadCloudData(p);
+        var p = document.getElementById("loginPhone").value;
+        var pw = document.getElementById("loginPass").value;
+        loginUser(p, pw);
       };
     }, 100);
     return;
