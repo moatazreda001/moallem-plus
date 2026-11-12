@@ -1,5 +1,6 @@
-const CACHE_NAME = 'mudaris-plus-v1';
+const CACHE_NAME = 'mudaris-plus-v3';
 const assetsToCache = [
+  './',
   './index.html',
   './manifest.json'
 ];
@@ -30,8 +31,17 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-    fetch(event.request).catch(function() {
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .then(function(response) {
+        return response;
+      })
+      .catch(function() {
+        return caches.match(event.request).then(function(cachedResponse) {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return caches.match('./index.html');
+        });
+      })
   );
 });
