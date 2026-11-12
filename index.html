@@ -41,12 +41,53 @@ input,select,textarea{width:100%;padding:12px;border:1px solid var(--bd);border-
 .fab{position:fixed;inset-inline-start:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:14px 20px;border-radius:30px;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:10}
 .month{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .month button{padding:8px 14px}
-dialog{border:1px solid var(--bd);border-radius:16px;background:var(--card);color:var(--tx);width:min(92vw,420px);padding:18px}
+dialog{border:1px solid var(--bd);border-radius:16px;background:var(--card);color:var(--tx);width:min(94vw,440px);padding:18px;max-height:85vh;overflow-y:auto}
 dialog::backdrop{background:rgba(0,0,0,.5)}
 .row{display:flex;gap:8px}.row>*{flex:1}
 .link{color:var(--pri);font-size:13px;text-decoration:none}
 .hint{color:var(--mut);font-size:13px;margin:-4px 0 10px}
-.student-table{width:100%;border-collapse:separate;border-spacing:0 7px;table-layout:fixed}.student-table th{font-size:13px;color:var(--mut);font-weight:600;padding:4px}.student-table td{padding:0 3px}.student-table input{margin:0;padding:10px 8px;min-width:0}.student-table .delrow{padding:9px 10px;background:transparent;color:var(--red);border:1px solid var(--bd)}.addrow{width:100%;margin:7px 0 12px}.dlg-actions{display:flex;gap:8px}.dlg-actions>*{flex:1}
+
+/* تحسين تصميم إدخال الطلاب الرأسي للموبايل */
+.student-card-item {
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.student-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.student-row-top {
+  display: flex;
+  gap: 8px;
+}
+.student-row-top input {
+  margin-bottom: 0;
+}
+.student-row-bottom {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.student-row-bottom input {
+  margin-bottom: 0;
+  flex: 1;
+}
+.del-card-btn {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.addrow{width:100%;margin:7px 0 12px}
+.dlg-actions{display:flex;gap:8px;margin-top:14px}.dlg-actions>*{flex:1}
+
 .grp-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;overflow:hidden}
 .grp-hdr{padding:13px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;gap:10px}
 .grp-hdr:active{opacity:.85}
@@ -57,9 +98,6 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .grp-pill{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:3px 9px;font-weight:600;color:var(--tx)}
 .grp-body{border-top:1px solid var(--bd);padding:10px;background:var(--bg)}
 .grp-search{margin-bottom:8px;padding:9px 12px;font-size:14px;border-radius:10px}
-.sync-bar{font-size:11px;color:var(--grn);text-align:center;margin-bottom:8px}
-.pass-wrapper{position:relative;display:flex;align-items:center}
-.pass-wrapper input{margin-bottom:0}
 .days-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
 .day-chk{display:flex;align-items:center;gap:4px;font-size:13px;background:var(--bg);border:1px solid var(--bd);padding:6px 8px;border-radius:8px;cursor:pointer}
 .day-chk input{width:auto;margin:0}
@@ -86,13 +124,12 @@ var saved = localStorage.getItem("tutorAppData_standalone");
 if (saved) { try { db = JSON.parse(saved); } catch(e) {} }
 db.g = (db.g || []).map(function(g) { return typeof g === "string" ? { id: g, n: g, fee: 0, days: [0,1,2,3,4,5,6] } : g; });
 
-var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", syncStatus = "محلي وآمن تماماً", showAllGroupsToday = false;
+var tab = "pay", gsel = "", mon = new Date(), dayD = new Date(), attQuery = "", openGrps = {}, grpQueries = "", studentQuery = "", studentFilterGrp = "all", studentFilterMonth = "all", showAllGroupsToday = false;
 
 function save() {
   try {
     localStorage.setItem("tutorAppData_standalone", JSON.stringify(db));
-    syncStatus = "✓ تم الحفظ محلياً";
-  } catch(e) { syncStatus = "خطأ في الحفظ"; }
+  } catch(e) {}
   render();
 }
 
@@ -108,7 +145,6 @@ function fee(s) { if (s.free) return 0; var baseFee = (s.cf != null && s.cf !== 
 function render() {
   if (db.g.length && !grp(gsel)) gsel = db.g[0].id;
   var h = '<h1>🎓 مدرس بلس <div class="user-badges"><button id="installAppBtn" class="install-badge">📥 تثبيت التطبيق</button></div></h1>';
-  h += '<div class="sync-bar">' + syncStatus + '</div>';
   h += '<div class="tabs"><button data-t="pay" class="' + (tab === "pay" ? "on" : "") + '">المصاريف</button><button data-t="att" class="' + (tab === "att" ? "on" : "") + '">الحضور</button><button data-t="students" class="' + (tab === "students" ? "on" : "") + '">الطلاب</button><button data-t="grp" class="' + (tab === "grp" ? "on" : "") + '">المجموعات</button></div>';
   
   if (tab === "pay") h += payView();
@@ -122,16 +158,11 @@ function render() {
   if (instBtn) {
     instBtn.onclick = function() {
       if (deferredPrompt) {
-        // إطلاق نافذة التثبيت المباشر من المتصفح بنقرة واحدة
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function(choiceResult) {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('تم تثبيت التطبيق بنجاح');
-          }
           deferredPrompt = null;
         });
       } else {
-        // لو متصفح الموبايل حجب نافذة التثبيت التلقائية، نعرض إرشاداً سريعاً أو نفتح القائمة
         alert("لتثبيت التطبيق على شاشة هاتفك فوراً:\n1. اضغط على قائمة الثلاث نقاط أعلى متصفح كروم.\n2. اختر 'تثبيت التطبيق' (Install app) أو 'إضافة إلى الشاشة الرئيسية'.");
       }
     };
@@ -362,31 +393,67 @@ function bind() {
   if (q("adds")) q("adds").onclick = function() { if (!db.g.length) { tab = "grp"; render(); return; } newStudents(gsel); };
 }
 
+// دوال إدارة إدخال الطلاب بتصميم الكروت الرأسية النظيفة
 function studentRowsHTML(count) {
-  var h = '<table class="student-table"><thead><tr><th style="width:40%">اسم الطالب</th><th style="width:35%">موبايل ولي الأمر</th><th>إضافي</th><th style="width:35px"></th></tr></thead><tbody id="studentRows">';
-  for (var i = 0; i < (count || 3); i++) h += '<tr><td><input class="student-name" type="text" placeholder="الاسم" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="الموبايل" autocomplete="off"></td><td><input class="student-extra" type="number" inputmode="decimal" placeholder="ملزمة" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف">×</button></td></tr>';
-  return h + '</tbody></table><button type="button" class="sec addrow" id="addStudentRow">+ إضافة طالب آخر</button>';
+  var h = '<div id="studentRowsContainer">';
+  for (var i = 0; i < (count || 2); i++) {
+    h += '<div class="student-card-item">' +
+         '<div class="student-card-fields">' +
+         '<div class="student-row-top">' +
+         '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off" style="flex:2">' +
+         '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر" autocomplete="off" style="flex:2">' +
+         '</div>' +
+         '<div class="student-row-bottom">' +
+         '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة)" autocomplete="off">' +
+         '<button type="button" class="del-card-btn" title="حذف الطالب">✕</button>' +
+         '</div>' +
+         '</div>' +
+         '</div>';
+  }
+  h += '</div>';
+  return h + '<button type="button" class="sec addrow" id="addStudentRow">+ إضافة طالب آخر</button>';
 }
 
 function setupStudentRows() {
-  var body = document.getElementById('studentRows'); if (!body) return;
-  function addRow(focus) { var tr = document.createElement('tr'); tr.innerHTML = '<td><input class="student-name" type="text" placeholder="الاسم" autocomplete="off"></td><td><input class="student-phone" type="tel" inputmode="tel" placeholder="الموبايل" autocomplete="off"></td><td><input class="student-extra" type="number" inputmode="decimal" placeholder="ملزمة" autocomplete="off"></td><td><button type="button" class="delrow" title="حذف">×</button></td>'; body.appendChild(tr); if (focus) tr.querySelector('.student-name').focus(); }
+  var container = document.getElementById('studentRowsContainer'); if (!container) return;
+  function addRow(focus) {
+    var div = document.createElement('div');
+    div.className = 'student-card-item';
+    div.innerHTML = '<div class="student-card-fields">' +
+                    '<div class="student-row-top">' +
+                    '<input class="student-name" type="text" placeholder="اسم الطالب" autocomplete="off" style="flex:2">' +
+                    '<input class="student-phone" type="tel" inputmode="tel" placeholder="رقم ولي الأمر" autocomplete="off" style="flex:2">' +
+                    '</div>' +
+                    '<div class="student-row-bottom">' +
+                    '<input class="student-extra" type="number" inputmode="decimal" placeholder="مصاريف إضافية (ملزمة/مذكرة)" autocomplete="off">' +
+                    '<button type="button" class="del-card-btn" title="حذف الطالب">✕</button>' +
+                    '</div>' +
+                    '</div>';
+    container.appendChild(div);
+    if (focus) div.querySelector('.student-name').focus();
+  }
   document.getElementById('addStudentRow').onclick = function() { addRow(true); };
-  body.addEventListener('input', function(e) { var tr = e.target.closest('tr'); if (tr && tr === body.lastElementChild && e.target.value.trim()) addRow(false); });
-  body.addEventListener('click', function(e) { if (e.target.classList.contains('delrow')) { if (body.children.length > 1) e.target.closest('tr').remove(); else { body.querySelectorAll('input').forEach(function(x) { x.value = ''; }); } } });
+  container.addEventListener('input', function(e) { 
+    var card = e.target.closest('.student-card-item'); 
+    if (card && card === container.lastElementChild && e.target.value.trim()) addRow(false); 
+  });
+  container.addEventListener('click', function(e) { 
+    if (e.target.classList.contains('del-card-btn')) { 
+      if (container.children.length > 1) e.target.closest('.student-card-item').remove(); 
+      else { container.querySelectorAll('input').forEach(function(x) { x.value = ''; }); } 
+    } 
+  });
 }
 
 function collectStudentRows() { 
-  return Array.from(document.querySelectorAll('#studentRows tr')).map(function(tr) { 
+  return Array.from(document.querySelectorAll('.student-card-item')).map(function(card) { 
     return { 
-      n: tr.querySelector('.student-name').value.trim(), 
-      ph: tr.querySelector('.student-phone').value.trim(),
-      ex: parseFloat(tr.querySelector('.student-extra').value) || 0
+      n: card.querySelector('.student-name').value.trim(), 
+      ph: card.querySelector('.student-phone').value.trim(),
+      ex: parseFloat(card.querySelector('.student-extra').value) || 0
     }; 
   }).filter(function(x) { return x.n !== ''; }); 
 }
-
-function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph, ex: x.ex }); }); }
 
 function openStudentEntry(title, gid, isNewGroup) {
   var f = document.getElementById('df'), d = document.getElementById('dlg');
@@ -405,7 +472,7 @@ function openStudentEntry(title, gid, isNewGroup) {
             '<label class="day-chk"><input type="checkbox" class="gday" value="6" checked> سبت</label>' +
             '</div>';
   }
-  html += '<div class="hint">اكتب كل طالب في صف مستقل. خانة الإضافي (للملازم/المذكرات) اختيارية.</div>' + studentRowsHTML(3) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
+  html += '<div class="hint">اكتب كل طالب في بطاقة منفصلة. خانة المصاريف الإضافية (للملازم/المذكرات) اختيارية.</div>' + studentRowsHTML(2) + '<div class="dlg-actions"><button id="studentSave">حفظ الطلاب</button><button class="sec" id="studentCancel">إلغاء</button></div>';
   f.innerHTML = html; document.getElementById('dt').textContent = title; d.showModal(); setupStudentRows();
   document.getElementById('studentCancel').onclick = function() { d.close(); };
   document.getElementById('studentSave').onclick = function() {
@@ -427,6 +494,8 @@ function openStudentEntry(title, gid, isNewGroup) {
 
 function newGroup() { openStudentEntry('مجموعة جديدة', null, true); }
 function newStudents(gid) { openStudentEntry('إضافة طلاب إلى ' + grp(gid).n, gid, false); }
+
+function saveStudentRows(gid, rows) { rows.forEach(function(x, i) { db.s.push({ id: String(Date.now()) + i + Math.random().toString(36).slice(2, 6), n: x.n, g: gid, ph: x.ph, ex: x.ex }); }); }
 
 function editGroup(id) {
   var g = grp(id);
