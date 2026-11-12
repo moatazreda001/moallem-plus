@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mudaris-plus-v3';
+const CACHE_NAME = 'mudaris-plus-v4';
 const assetsToCache = [
   './',
   './index.html',
